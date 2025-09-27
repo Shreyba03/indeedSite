@@ -5,6 +5,7 @@ from .forms import CustomUserCreationForm, CustomErrorList
 from django.contrib.auth import login as auth_login, authenticate, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from jobs.models import Profile
 
 # Create your views here.
 def signup(request):
@@ -17,7 +18,10 @@ def signup(request):
     elif request.method == 'POST':
         form = CustomUserCreationForm(request.POST, error_class=CustomErrorList)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            profile = Profile()
+            profile.user = user
+            profile.save()
             return redirect('home.index')
         else:
             template_data['form'] = form
