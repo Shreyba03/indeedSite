@@ -15,17 +15,15 @@ def show(request, id):
     return render(request, 'jobs/show.html', {'template_data': template_data})
 
 def profile(request, user_id):
-    profile_user = get_object_or_404(User, id=user_id)
-    template_data = {
-        "profile_user": profile_user
-    }
-    return render(request, "jobs/profile.html", {
-        "template_data": template_data
-    })
+    user = get_object_or_404(User, id=user_id)
+    profile = get_object_or_404(Profile, user=user)
+    template_data = {}
+    template_data['profile'] = profile
+    template_data['owner'] = user
+    return render(request, 'jobs/profile.html', {'template_data':template_data})
 
 @login_required
 def edit_profile(request, user_id):
-    print(user_id)
     profile = get_object_or_404(Profile, user__id = user_id)
 
     if (request.user != profile.user):

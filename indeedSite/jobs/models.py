@@ -22,5 +22,9 @@ class Profile(models.Model):
     portfolio = models.URLField(blank=True)
     github = models.URLField(blank=True)
     email = models.EmailField(blank=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+
+    show_email = models.BooleanField(default=False)
+    show_phone = models.BooleanField(default=False)
     def __str__(self):
         return f"{self.user.username}'s Profile"

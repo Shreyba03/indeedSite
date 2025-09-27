@@ -1,9 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Profile page</title>
+  <title>{{ template_data.owner.username }}'s Profile</title>
 </head>
 <body>
-  <h1>Welcome to the Profile Page: {{template_data.profile_user.username}}</h1>
+  <h1>{{ template_data.profile.headline }}</h1>
+
+  <h3>Skills</h3>
+  <p>{{ template_data.profile.skills }}</p>
+
+  <h3>Education</h3>
+  <p>{{ template_data.profile.education }}</p>
+
+  <h3>Work Experience</h3>
+  <p>{{ template_data.profile.experience }}</p>
+
+  {% if template_data.profile.show_email %}
+    <h3>Email</h3>
+    <p>{{ template_data.profile.email }}</p>
+  {% endif %}
+
+  {% if template_data.profile.show_phone %}
+    <h3>Phone</h3>
+    <p>{{ template_data.profile.phone_number }}</p>
+  {% endif %}
+
+  {% if template_data.owner.id == template_data.profile.user.id %}
+    <a href="{% url 'profile.edit' template_data.owner.id %}" class="btn btn-primary">
+      Edit Profile
+    </a>
+  {% endif %}
 </body>
 </html>
