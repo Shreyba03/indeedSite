@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
-from .models import Job, Profile, Application
+from .models import Job, Profile, Application, Skill, Experience
 from django.contrib.auth.decorators import login_required
 from .forms import ProfileForm
 
@@ -41,20 +41,28 @@ def apply_to_job(request, job_id):
 def profile(request, user_id):
     user = get_object_or_404(User, id=user_id)
     profile = get_object_or_404(Profile, user=user)
+    for skill in profile.skill_list.all():
+        print(skill.name)
+
+    for experience_list in profile.experience_list.all():
+        print(experience_list.company)
     
     # Get user's applications
     applications = Application.objects.filter(user=user).select_related('job')
     
     # Parse skills from text field (comma-separated)
+    '''
     skills_list = []
     if profile.skills:
         skills_list = [skill.strip() for skill in profile.skills.split(',') if skill.strip()]
-    
+    ''' 
+
     template_data = {}
     template_data['profile'] = profile
     template_data['owner'] = user
     template_data['applications'] = applications
-    template_data['skills_list'] = skills_list
+    template_data['skills_list'] = profile.skill_list.all()
+    template_data['experience_list'] = profile.experience_list.all()
     
     return render(request, 'jobs/profile.html', {'template_data': template_data})
 
@@ -74,3 +82,56 @@ def edit_profile(request, user_id):
         form = ProfileForm(instance=profile)
 
     return render(request, 'jobs/edit_profile.html', {'template_data': {'form': form}})
+
+@login_required
+def edit_skills(request, user_id):
+    profile = get_object_or_404(Profile, user__id=user_id)
+
+    if request.user != profile.user:
+        return redirect('home.index')
+
+    skills = profile.skill_list.all()
+
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        proficiency = request.POST.get('proficiency', 'Intermediate')
+
+        if name:
+            Skill.objects.create(profile=profile, name=name, proficiency=proficiency)
+
+        return redirect('skills.edit', user_id=profile.user.id)
+
+    return render(request, 'jobs/edit_skills.html', {'profile': profile, 'skills': skills})
+
+
+@login_required
+def edit_experience(request, user_id):
+    profile = get_object_or_404(Profile, user__id=user_id)
+
+    if request.user != profile.user:
+        return redirect('home.index')
+
+    experiences = profile.experience_list.all()
+
+    if request.method == 'POST':
+        company = request.POST.get('company')
+        position = request.POST.get('position')
+        description = request.POST.get('description')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        is_current = request.POST.get('is_current') == 'on'
+
+        if company and position and start_date:
+            Experience.objects.create(
+                profile=profile,
+                company=company,
+                position=position,
+                description=description,
+                start_date=start_date,
+                end_date=end_date or None,
+                is_current=is_current
+            )
+
+        return redirect('experience.edit', user_id=profile.user.id)
+
+    return render(request, 'jobs/edit_experience.html', {'profile': profile, 'experiences': experiences})

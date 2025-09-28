@@ -4,7 +4,7 @@ from .models import Profile, Skill, Experience
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['headline', 'skills', 'education', 'experience', 'email', 'portfolio', 'github', "phone_number", "show_email", "show_phone"]
+        fields = ['headline', 'education', 'email', 'portfolio', 'github', "phone_number", "show_email", "show_phone"]
         
 
 class SkillForm(forms.ModelForm):

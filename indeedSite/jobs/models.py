@@ -15,9 +15,9 @@ class Job(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     headline = models.CharField(max_length=255, blank=True)
-    skills = models.TextField(blank=True, help_text="Comma-separated list of skills")
+    #skills = models.TextField(blank=True, help_text="Comma-separated list of skills")
     education = models.TextField(blank=True)
-    experience = models.TextField(blank=True)
+    #experience = models.TextField(blank=True)
 
     # Toggleable links and info
     portfolio = models.URLField(blank=True)
