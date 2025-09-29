@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from .models import Job, Profile, Application, Skill, Experience
 from django.contrib.auth.decorators import login_required
 from .forms import ProfileForm
+from django.http import JsonResponse
+from django.db.models import Q
 
 def index(request):
     jobs = Job.objects.all()
@@ -14,8 +16,7 @@ def show(request, id):
     template_data = {}
     template_data['job'] = job
     template_data['title'] = job.name
-    
-    # Check if user has applied to this job
+
     if request.user.is_authenticated:
         try:
             application = Application.objects.get(user=request.user, job=job)
@@ -29,7 +30,6 @@ def show(request, id):
 def apply_to_job(request, job_id):
     job = get_object_or_404(Job, id=job_id)
     
-    # Check if user has already applied
     application, created = Application.objects.get_or_create(
         user=request.user,
         job=job,
@@ -47,10 +47,8 @@ def profile(request, user_id):
     for experience_list in profile.experience_list.all():
         print(experience_list.company)
     
-    # Get user's applications
     applications = Application.objects.filter(user=user).select_related('job')
     
-    # Parse skills from text field (comma-separated)
     '''
     skills_list = []
     if profile.skills:
@@ -135,3 +133,76 @@ def edit_experience(request, user_id):
         return redirect('experience.edit', user_id=profile.user.id)
 
     return render(request, 'jobs/edit_experience.html', {'profile': profile, 'experiences': experiences})
+
+
+def job_list(request):
+    jobs = Job.objects.all()
+
+    title = request.GET.get("title")
+    skills = request.GET.get("skills")
+    location = request.GET.get("location")
+    remote = request.GET.get("remote")
+    visa = request.GET.get("visa")
+    salary_min = request.GET.get("salary_min")
+    salary_max = request.GET.get("salary_max")
+
+    if title:
+        jobs = jobs.filter(title__icontains=title)
+    if skills:
+        jobs = jobs.filter(skills_required__icontains=skills)
+    if location:
+        jobs = jobs.filter(location__icontains=location)
+    if remote:  # e.g., ?remote=1
+        jobs = jobs.filter(remote=True)
+    if visa:  # e.g., ?visa=1
+        jobs = jobs.filter(visa_sponsorship=True)
+    if salary_min:
+        jobs = jobs.filter(salary_min__gte=salary_min)
+    if salary_max:
+        jobs = jobs.filter(salary_max__lte=salary_max)
+
+    return render(request, "jobs/job_list.html", {"jobs": jobs})
+
+
+def job_detail(request, id):
+    job = get_object_or_404(Job, id=id)
+    return render(request, "jobs/job_detail.html", {"job": job})
+
+# @login_required
+def apply_to_job(request, id):
+    job = get_object_or_404(Job, id=id)
+
+    if request.method == "POST":
+        note = request.POST.get("note", "")
+        Application.objects.create(user=request.user, job=job, note=note, status="Applied")
+        return redirect("job_detail", id=job.id)
+
+    return render(request, "jobs/apply.html", {"job": job})
+
+# @login_required
+def my_applications(request):
+    # Get all applications for the logged-in user
+    applications = Application.objects.filter(user=request.user).order_by('-applied_at')
+    return render(request, "jobs/my_applications.html", {"applications": applications})
+
+@login_required
+def recommended_jobs(request):
+    profile = request.user.profile
+    user_skills = profile.skill_list.values_list('name', flat=True)
+
+    jobs = Job.objects.none()
+
+    for skill in user_skills:
+        jobs |= Job.objects.filter(skills_required__icontains=skill.strip())
+
+    jobs = jobs.distinct()  # remove duplicates
+    return render(request, "jobs/recommended_jobs.html", {"jobs": jobs})
+
+def job_map_page(request):
+    """Renders the HTML page containing the map."""
+    return render(request, "jobs/job_map.html")
+
+def job_map_data(request):
+    """Returns JSON data for all jobs with lat/lng."""
+    jobs = Job.objects.values("id", "title", "company", "location", "latitude", "longitude")
+    return JsonResponse(list(jobs), safe=False)

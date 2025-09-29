@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Job Listings</title>
+</head>
+<body>
+  <h1>Available Jobs</h1>
+
+  <!-- 🔍 Filters Form -->
+  <form method="get" action="">
+    <label for="title">Job Title:</label>
+    <input type="text" id="title" name="title" value="{{ request.GET.title }}">
+
+    <label for="skills">Skills:</label>
+    <input type="text" id="skills" name="skills" value="{{ request.GET.skills }}">
+
+    <label for="location">Location:</label>
+    <input type="text" id="location" name="location" value="{{ request.GET.location }}">
+
+    <label for="salary_min">Min Salary:</label>
+    <input type="number" id="salary_min" name="salary_min" value="{{ request.GET.salary_min }}">
+
+    <label for="salary_max">Max Salary:</label>
+    <input type="number" id="salary_max" name="salary_max" value="{{ request.GET.salary_max }}">
+
+    <label>
+      <input type="checkbox" name="remote" value="1" {% if request.GET.remote %}checked{% endif %}>
+      Remote
+    </label>
+
+    <label>
+      <input type="checkbox" name="visa" value="1" {% if request.GET.visa %}checked{% endif %}>
+      Visa Sponsorship
+    </label>
+
+    <button type="submit">Search</button>
+  </form>
+
+  <hr>
+
+  <!-- 📋 Job Listings -->
+  {% if jobs %}
+    <ul>
+      {% for job in jobs %}
+        <li>
+          <a href="{% url 'job_detail' job.id %}">
+            {{ job.title }} at {{ job.company }} ({{ job.location }})
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No jobs found.</p>
+  {% endif %}
+</body>
+</html>

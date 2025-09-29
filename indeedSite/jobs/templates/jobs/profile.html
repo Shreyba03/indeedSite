@@ -28,14 +28,17 @@
                     <span class="badge bg-secondary">{{ skill.proficiency }}</span>
                   </div>
                 {% endfor %}
-                {% if template_data.profile.user.id == template_data.owner.id %}
-                  <a href="{% url 'skills.edit' template_data.owner.id %}" class="btn btn-primary">Edit Skills</a>
+                {% if request.user.id == template_data.profile.user.id %}
+                  <a href="{% url 'skills.edit' template_data.profile.user.id %}" class="btn btn-primary btn-sm d-inline-block mt-2">Edit Skills</a>
                 {% endif %}
               </div>
             {% elif template_data.profile.skills %}
               <p>{{ template_data.profile.skills }}</p>
             {% else %}
               <p class="text-muted">No skills added yet.</p>
+              {% if request.user.id == template_data.profile.user.id %}
+                  <a href="{% url 'skills.edit' template_data.profile.user.id %}" class="btn btn-primary">Edit Skills</a>
+              {% endif %}
             {% endif %}
           </div>
         </div>
@@ -71,12 +74,15 @@
                     <p class="mt-2">{{ exp.description }}</p>
                   </div>
                 {% endfor %}
-                {% if template_data.profile.user.id == template_data.owner.id %}
-                  <a href="{% url 'experience.edit' template_data.owner.id %}" class="btn btn-primary">Edit Experience</a>
+                {% if request.user.id == template_data.profile.user.id %}
+                  <a href="{% url 'experience.edit' template_data.profile.user.id %}" class="btn btn-primary btn-sm d-inline-block mt-2">Edit Experience</a>
                 {% endif %}
               </div>
             {% else %}
               <p class="text-muted">No work experience added yet.</p>
+              {% if request.user.id == template_data.profile.user.id %}
+                  <a href="{% url 'experience.edit' template_data.profile.user.id %}" class="btn btn-primary">Edit Experience</a>
+                {% endif %}
             {% endif %}
           </div>
         </div>

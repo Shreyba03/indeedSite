@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ job.title }}</title>
+</head>
+<body>
+  <h1>{{ job.title }}</h1>
+  <p>Company: {{ job.company }}</p>
+  <p>Location: {{ job.location }}</p>
+  <p>Salary: ${{ job.salary_min }} – ${{ job.salary_max }}</p>
+  <p>Skills Required: {{ job.skills_required }}</p>
+  <p>{% if job.visa_sponsorship %}Visa Sponsorship Available{% endif %}</p>
+  <p>{% if job.remote %}Remote Friendly{% endif %}</p>
+
+  <a href="{% url 'apply_to_job' job.id %}">Apply Now</a>
+</body>
+<a class="btn btn-secondary" href="{%url 'home.index'%}">Home</a>
+</html>

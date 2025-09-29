@@ -1,0 +1,11 @@
+<h1>Recommended Jobs</h1>
+{% if jobs %}
+  <ul>
+    {% for job in jobs %}
+      <li><a href="{% url 'job_detail' job.id %}">{{ job.title }} at {{ job.company }}</a></li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No recommendations available.</p>
+{% endif %}
+<a class="btn btn-secondary" href="{%url 'home.index'%}">Home</a>

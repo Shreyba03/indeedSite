@@ -10,17 +10,19 @@
 </head>
 <body>
   <div class="container mt-5">
-    <h1 class="mb-4">Welcome to the Home Page</h1>
+    <h1 class="mb-4">Welcome to LinkedinLite</h1>
     
     <div class="d-flex flex-wrap gap-2 mb-4">
-      <a class="btn btn-primary" href="{%url 'jobs.index'%}">Job Posts</a>
+      <a class="btn btn-primary" href="{%url 'job_list'%}">Job Posts</a>
       <a class="btn btn-secondary" href="{%url 'home.index'%}">About</a>
-      <a class="btn btn-success" href="{%url 'accounts.login'%}">Login</a>
+      <a class="btn btn-primary" href="{%url 'job_map_page'%}">Job Map</a>
       
       {% if user.is_authenticated %}
         <a class="btn btn-info" href="{%url 'profile.index' request.user.id%}">Your Profile</a>
         <a class="btn btn-danger" href="{%url 'accounts.logout'%}">Logout {{user.username}}</a>
+        <a class="btn btn-primary" href="{%url 'recommended_jobs'%}">See Recommended Jobs</a>
       {% else %}
+        <a class="btn btn-success" href="{%url 'accounts.login'%}">Login</a>
         <a class="btn btn-warning" href="{%url 'accounts.signup'%}">Sign Up</a>
       {% endif %}
     </div>

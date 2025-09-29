@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Applications</title>
+</head>
+<body>
+  <h1>My Applications</h1>
+
+  {% if applications %}
+    <table border="1" cellpadding="5">
+      <tr>
+        <th>Job Title</th>
+        <th>Company</th>
+        <th>Status</th>
+        <th>Applied At</th>
+      </tr>
+      {% for app in applications %}
+      <tr>
+        <td><a href="{% url 'job_detail' app.job.id %}">{{ app.job.title }}</a></td>
+        <td>{{ app.job.company }}</td>
+        <td>{{ app.get_status_display }}</td>
+        <td>{{ app.applied_at }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p>You haven't applied to any jobs yet.</p>
+  {% endif %}
+</body>
+</html>
