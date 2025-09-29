@@ -23,6 +23,6 @@ urlpatterns = [
     path("<int:id>/apply/", views.apply_to_job, name="apply_to_job"),
     path("applications/", views.my_applications, name="my_applications"),
     path('recommended/', views.recommended_jobs, name='recommended_jobs'),
-    path("map/", views.job_map_page, name="job_map_page"),   # HTML page
-    path("map-data/", views.job_map_data, name="job_map_data"),  # JSON data
+    path("map/", views.job_map_page, name="job_map_page"),
+    path("map-data/", views.job_map_data, name="job_map_data"), 
 ]
