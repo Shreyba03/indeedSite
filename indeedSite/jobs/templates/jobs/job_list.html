@@ -114,7 +114,6 @@
 <body>
   <h1>Available Jobs</h1>
 
-  <!-- 🔍 Filters Form -->
   <form method="get" action="">
     <label for="title">Job Title:</label>
     <input type="text" id="title" name="title" value="{{ request.GET.title }}">
@@ -147,7 +146,6 @@
 
   <hr>
 
-  <!-- 📋 Job Listings -->
   {% if jobs %}
     <ul>
       {% for job in jobs %}

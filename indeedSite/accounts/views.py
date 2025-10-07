@@ -21,6 +21,8 @@ def signup(request):
             user = form.save()
             profile = Profile()
             profile.user = user
+            profile.is_recruiter = form.cleaned_data['is_recruiter']
+            profile.company = form.cleaned_data['company']
             profile.save()
             return redirect('home.index')
         else:

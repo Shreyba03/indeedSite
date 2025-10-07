@@ -8,9 +8,47 @@
             <hr />
             <form method="POST">
               {% csrf_token %}
-              {{ template_data.form.as_p }}
-              <button type="submit" class="btn bg-dark text-white">Sign Up
-              </button>
+
+              <!-- Username -->
+              <div class="mb-3">
+                {{ template_data.form.username.label_tag }}
+                {{ template_data.form.username }}
+                {% if template_data.form.username.errors %}
+                  <div class="text-danger">{{ template_data.form.username.errors }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Password1 -->
+              <div class="mb-3">
+                {{ template_data.form.password1.label_tag }}
+                {{ template_data.form.password1 }}
+                {% if template_data.form.password1.errors %}
+                  <div class="text-danger">{{ template_data.form.password1.errors }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Password2 -->
+              <div class="mb-3">
+                {{ template_data.form.password2.label_tag }}
+                {{ template_data.form.password2 }}
+                {% if template_data.form.password2.errors %}
+                  <div class="text-danger">{{ template_data.form.password2.errors }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Is Recruiter Checkbox -->
+              <div class="form-check mb-3">
+                {{ template_data.form.is_recruiter }}
+                {{ template_data.form.is_recruiter.label_tag }}
+              </div>
+
+              <!-- Company Field (hidden by default) -->
+              <div class="mb-3" id="company-field" style="display: none;">
+                {{ template_data.form.company.label_tag }}
+                {{ template_data.form.company }}
+              </div>
+
+              <button type="submit" class="btn bg-dark text-white">Sign Up</button>
             </form>
           </div>
         </div>
@@ -18,3 +56,22 @@
     </div>
   </div>
 </div>
+
+<!-- JavaScript to toggle the company field -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkbox = document.getElementById('id_is_recruiter');
+    const companyField = document.getElementById('company-field');
+
+    function toggleCompany() {
+        if (checkbox.checked) {
+            companyField.style.display = 'block';
+        } else {
+            companyField.style.display = 'none';
+        }
+    }
+
+    checkbox.addEventListener('change', toggleCompany);
+    toggleCompany(); // initialize on page load
+});
+</script>

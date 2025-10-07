@@ -11,7 +11,6 @@ class Profile(models.Model):
     education = models.TextField(blank=True)
     #experience = models.TextField(blank=True)
 
-    # Toggleable links and info
     portfolio = models.URLField(blank=True)
     github = models.URLField(blank=True)
     email = models.EmailField(blank=True)
@@ -19,6 +18,9 @@ class Profile(models.Model):
 
     show_email = models.BooleanField(default=False)
     show_phone = models.BooleanField(default=False)
+
+    is_recruiter = models.BooleanField(default=False)
+    company = models.CharField(max_length=255, blank=True)
     
     def __str__(self):
         return f"{self.user.username}'s Profile"
