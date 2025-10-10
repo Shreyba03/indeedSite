@@ -3,57 +3,199 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edit Skills</title>
-
+  <title>Edit Skills - IndeedLite</title>
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{% load static %}{% static 'css/style.css' %}">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-  <div class="container mt-5" style="max-width: 600px;">
-
-    <h2 class="mb-4">Edit Skills</h2>
-
-    <!-- Existing Skills -->
-    {% if skills %}
-      <ul class="list-group mb-4">
-        {% for skill in skills %}
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            {{ skill.name }}
-            <span class="badge bg-secondary">{{ skill.proficiency }}</span>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{%url 'home.index'%}">
+        <i class="fas fa-briefcase me-2"></i>IndeedLite
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{%url 'job_list'%}">
+              <i class="fas fa-briefcase me-1"></i>Jobs
+            </a>
           </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="text-muted mb-4">No skills added yet.</p>
-    {% endif %}
-
-    <!-- Add New Skill Form -->
-    <form method="POST" class="p-4 border rounded bg-light shadow-sm">
-      {% csrf_token %}
-
-      <h4 class="mb-3">Add New Skill</h4>
-
-      <div class="mb-3">
-        <label for="name" class="form-label">Skill Name</label>
-        <input type="text" name="name" id="name" class="form-control" placeholder="Skill Name" required>
+          <li class="nav-item">
+            <a class="nav-link" href="{%url 'job_map_page'%}">
+              <i class="fas fa-map-marker-alt me-1"></i>Job Map
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="{%url 'profile.index' request.user.id%}">
+              <i class="fas fa-user me-1"></i>Profile
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{%url 'recommended_jobs'%}">
+              <i class="fas fa-star me-1"></i>Recommended
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{%url 'accounts.logout'%}">
+              <i class="fas fa-sign-out-alt me-1"></i>Logout {{user.username}}
+            </a>
+          </li>
+        </ul>
       </div>
+    </div>
+  </nav>
 
-      <div class="mb-3">
-        <label for="proficiency" class="form-label">Proficiency</label>
-        <select name="proficiency" id="proficiency" class="form-select">
-          <option value="Beginner">Beginner</option>
-          <option value="Intermediate">Intermediate</option>
-          <option value="Advanced">Advanced</option>
-          <option value="Expert">Expert</option>
-        </select>
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-content text-center">
+        <h1 class="hero-title">Edit Your Skills</h1>
+        <p class="hero-subtitle">Showcase your professional skills and expertise</p>
       </div>
+    </div>
+  </section>
 
-      <button type="submit" class="btn btn-primary">Add Skill</button>
-    </form>
-    <a href="{% url 'profile.index' profile.user.id %}" class="btn btn-primary">Back</a>
+  <!-- Main Content -->
+  <div class="container mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{%url 'home.index'%}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'profile.index' profile.user.id %}">Your Profile</a></li>
+        <li class="breadcrumb-item active">Edit Skills</li>
+      </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <!-- Current Skills Section -->
+        <div class="card shadow-gt-lg mb-4">
+          <div class="card-header">
+            <h3 class="mb-0">
+              <i class="fas fa-tools me-2"></i>Current Skills
+            </h3>
+          </div>
+          <div class="card-body">
+            {% if skills %}
+              <div class="row">
+                {% for skill in skills %}
+                  <div class="col-md-6 mb-3">
+                    <div class="skill-item d-flex justify-content-between align-items-center p-3 border rounded">
+                      <div>
+                        <h6 class="mb-1">{{ skill.name }}</h6>
+                        <span class="badge bg-gt-gold text-dark">{{ skill.proficiency }}</span>
+                      </div>
+                      <i class="fas fa-check-circle text-success"></i>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="text-center py-4">
+                <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No skills added yet</h5>
+                <p class="text-muted">Start building your professional skills profile below</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Add New Skill Form -->
+        <div class="card shadow-gt-lg">
+          <div class="card-header">
+            <h3 class="mb-0">
+              <i class="fas fa-plus-circle me-2"></i>Add New Skill
+            </h3>
+          </div>
+          <div class="card-body">
+            <form method="POST">
+              {% csrf_token %}
+              
+              <!-- Skill Name Field -->
+              <div class="mb-4">
+                <label for="name" class="form-label">
+                  <i class="fas fa-tag me-2"></i>Skill Name
+                </label>
+                <input type="text" name="name" id="name" class="form-control" placeholder="e.g., Python, JavaScript, Project Management" required>
+                <div class="form-text">Enter the name of the skill you want to add</div>
+              </div>
+
+              <!-- Proficiency Level -->
+              <div class="mb-4">
+                <label for="proficiency" class="form-label">
+                  <i class="fas fa-chart-line me-2"></i>Proficiency Level
+                </label>
+                <select name="proficiency" id="proficiency" class="form-select">
+                  <option value="Beginner">Beginner - Just starting to learn</option>
+                  <option value="Intermediate">Intermediate - Comfortable with basics</option>
+                  <option value="Advanced">Advanced - Can work independently</option>
+                  <option value="Expert">Expert - Can teach others</option>
+                </select>
+                <div class="form-text">Select your current proficiency level with this skill</div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-primary btn-lg">
+                  <i class="fas fa-plus me-2"></i>Add Skill
+                </button>
+                <a href="{% url 'profile.index' profile.user.id %}" class="btn btn-outline-secondary btn-lg">
+                  <i class="fas fa-arrow-left me-2"></i>Back to Profile
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Skills Tips -->
+        <div class="row mt-4">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-lightbulb fa-3x text-gt-gold mb-3"></i>
+                <h5>Skill Tips</h5>
+                <p class="text-muted">Be honest about your proficiency level. Employers value accurate self-assessment.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-body text-center">
+                <i class="fas fa-star fa-3x text-gt-gold mb-3"></i>
+                <h5>Stand Out</h5>
+                <p class="text-muted">Include both technical and soft skills to showcase your full professional profile.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Bootstrap JS Bundle -->
+  <!-- Footer -->
+  <footer class="bg-gt-navy text-gt-white py-4 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <h5><i class="fas fa-briefcase me-2"></i>IndeedLite</h5>
+          <p class="mb-0">Connecting job seekers with career opportunities.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <p class="mb-0">&copy; 2024 IndeedLite. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

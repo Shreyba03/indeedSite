@@ -2,9 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from .models import Job, Profile, Application, Skill, Experience
 from django.contrib.auth.decorators import login_required
-from .forms import ProfileForm
+from .forms import ProfileForm, JobForm
 from django.http import JsonResponse
 from django.db.models import Q
+import requests
 
 def index(request):
     jobs = Job.objects.all()
@@ -206,3 +207,52 @@ def job_map_data(request):
     """Returns JSON data for all jobs with lat/lng."""
     jobs = Job.objects.values("id", "title", "company", "location", "latitude", "longitude")
     return JsonResponse(list(jobs), safe=False)
+
+##################################################
+# RECRUITER VIEWS
+##################################################
+
+# helper function to get latitude and longitude
+def get_lat_long(city_name):
+    url = "https://nominatim.openstreetmap.org/search"
+    params = {
+        "q": city_name,
+        "format": "json",
+        "limit": 1
+    }
+    response = requests.get(url, params=params, headers={"User-Agent": "my-django-app"})
+    data = response.json()
+    if data:
+        lat = float(data[0]["lat"])
+        lon = float(data[0]["lon"])
+        return lat, lon
+    return None, None
+
+def create_job(request):
+    if not request.user.is_authenticated:
+        return redirect('accounts.login')  # only logged-in users can create jobs
+
+    if request.method == 'POST':
+        form = JobForm(request.POST)
+        if form.is_valid():
+            job = form.save(commit=False)
+
+            # Automatically convert city to latitude and longitude
+            lat, lon = get_lat_long(job.location)
+            job.latitude = lat
+            job.longitude = lon
+
+            job.save()
+            return redirect('job_list')  # redirect to a job detail page
+    else:
+        form = JobForm()
+
+    return render(request, 'jobs/create_job.html', {'form': form})
+
+
+def user_list(request):
+    profiles = Profile.objects.all()
+
+    
+
+
