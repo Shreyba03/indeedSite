@@ -1,0 +1,47 @@
+<h1>{{ template_data.title }}</h1>
+
+<form method="get" style="margin-bottom: 20px;">
+  <input type="text" name="search" placeholder="Search by username, headline, or skill"
+         value="{{ template_data.search_term }}">
+  <button type="submit">Search</button>
+</form>
+
+<hr>
+
+{% for profile in template_data.profiles %}
+  <div class="profile-card" style="margin-bottom: 20px;">
+    <h2>{{ profile.user.username }}</h2>
+
+    {% if profile.headline %}
+      <p><strong>Headline:</strong> {{ profile.headline }}</p>
+    {% endif %}
+
+    {% if profile.skill_list.all %}
+      <p><strong>Skills:</strong></p>
+      <ul>
+        {% for skill in profile.skill_list.all %}
+          <li>{{ skill.name }} ({{ skill.proficiency }})</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    {% if profile.projects.all %}
+      <p><strong>Projects:</strong></p>
+      <ul>
+        {% for project in profile.projects.all %}
+          <li>
+            <strong>{{ project.title }}</strong>
+            {% if project.link %}
+              - <a href="{{ project.link }}" target="_blank">View</a>
+            {% endif %}
+            {% if project.description %}
+              <br>{{ project.description }}
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+{% empty %}
+  <p>No profiles found.</p>
+{% endfor %}

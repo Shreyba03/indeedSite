@@ -10,20 +10,36 @@ class Profile(models.Model):
     #skills = models.TextField(blank=True, help_text="Comma-separated list of skills")
     education = models.TextField(blank=True)
     #experience = models.TextField(blank=True)
+    location = models.CharField(max_length=255)
 
+    # FOR MAP
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+
+    # LINKS
     portfolio = models.URLField(blank=True)
     github = models.URLField(blank=True)
     email = models.EmailField(blank=True)
     phone_number = models.CharField(max_length=20, blank=True, null=True)
 
+    # PRIVACY OPTIONS
     show_email = models.BooleanField(default=False)
     show_phone = models.BooleanField(default=False)
 
+    # IF PROFILE IS A RECRUITER
     is_recruiter = models.BooleanField(default=False)
     company = models.CharField(max_length=255, blank=True)
     
     def __str__(self):
         return f"{self.user.username}'s Profile"
+    
+class Project(models.Model):
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='project_list')
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+
+    def __str__(self):
+        return f"{self.position} at {self.company}"
 
 class Skill(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='skill_list')

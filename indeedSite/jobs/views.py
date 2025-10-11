@@ -251,7 +251,24 @@ def create_job(request):
 
 
 def user_list(request):
-    profiles = Profile.objects.all()
+    search_term = request.GET.get('search', '')
+
+    profiles = Profile.objects.select_related('user').prefetch_related('skill_list', 'project_list')
+
+    if search_term:
+        profiles = profiles.filter(
+            Q(user__username__icontains=search_term) |
+            Q(headline__icontains=search_term) |
+            Q(skill_list__name__icontains=search_term)
+        ).distinct()
+
+    template_data = {
+        'title': 'User Profiles',
+        'profiles': profiles,
+        'search_term': search_term,
+    }
+
+    return render(request, 'jobs/user_list.html', {'template_data': template_data})
 
     
 

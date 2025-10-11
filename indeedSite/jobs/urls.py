@@ -26,5 +26,5 @@ urlpatterns = [
     path("map/", views.job_map_page, name="job_map_page"),
     path("map-data/", views.job_map_data, name="job_map_data"), 
     path("create-job/", views.create_job, name="job.create"), 
-    #path("user-list/", views.list_users, name="job.users"), 
+    path("user-list/", views.user_list, name="job.users"), 
 ]
