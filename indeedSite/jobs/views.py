@@ -42,11 +42,6 @@ def apply_to_job(request, job_id):
 def profile(request, user_id):
     user = get_object_or_404(User, id=user_id)
     profile = get_object_or_404(Profile, user=user)
-    for skill in profile.skill_list.all():
-        print(skill.name)
-
-    for experience_list in profile.experience_list.all():
-        print(experience_list.company)
     
     applications = Application.objects.filter(user=user).select_related('job')
     
@@ -314,5 +309,29 @@ def deleteMsg(request, username, id):
     
     return redirect('job_inbox', username=selected_user.username)
 
+def recommended_users(request, id):
+    job = get_object_or_404(Job, id=id)
+    job_skills = [s.strip().lower() for s in job.skills_required.split(',')]
 
+    recommended_profiles = []
 
+    for profile in Profile.objects.all():
+        if hasattr(profile, 'skill_list'):
+            profile_skills = [s.name.lower() for s in profile.skill_list.all()]
+        else:
+            profile_skills = [s.strip().lower() for s in profile.skills.split(',')]
+
+        match_count = len(set(job_skills) & set(profile_skills))
+        if match_count > 0:
+            profile.match_count = match_count
+            recommended_profiles.append(profile)
+
+    template_data = {
+        'job': job,
+        'profiles': recommended_profiles,
+        'skills_required': job_skills,
+        'title': f"Recommended Users for {job.title}",
+        'total_matches': len(recommended_profiles),
+    }
+
+    return render(request, 'jobs/recommended_users.html', {'template_data':template_data})

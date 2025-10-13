@@ -1,0 +1,11 @@
+<h1>{{ template_data.title }}</h1>
+<p>Total Matches: {{ template_data.total_matches }}</p>
+<ul>
+{% for profile in template_data.profiles %}
+    <li>
+        <a href="{% url 'profile.index' profile.user.id %}">
+            {{ profile.user.username }}
+        </a> - {{ profile.headline }} ({{ profile.match_count }} skills matched)
+    </li>
+{% endfor %}
+</ul>
