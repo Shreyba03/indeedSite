@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
-from .models import Job, Profile, Application, Skill, Experience
+from .models import Job, Profile, Application, Skill, Experience, Message
 from django.contrib.auth.decorators import login_required
 from .forms import ProfileForm, JobForm
 from django.http import JsonResponse
@@ -270,6 +270,49 @@ def user_list(request):
 
     return render(request, 'jobs/user_list.html', {'template_data': template_data})
 
+@login_required
+def inbox(request, username=None):
+    users = User.objects.exclude(id=request.user.id)
+    selected_user = None
+    messages = []
+
+    if username:
+        selected_user = get_object_or_404(User, username=username)
+
+        if request.method == "POST":
+            content = request.POST.get("message")
+            if content:
+                message = Message()
+                message.sender = request.user
+                message.receiver = selected_user
+                message.content = content
+                message.save()
+
+
+            return redirect('job_inbox', username=selected_user.username)
+
+        messages = Message.objects.filter(
+            sender__in=[request.user, selected_user],
+            receiver__in=[request.user, selected_user]
+        ).order_by('timestamp')
+
+    return render(request, 'jobs/inbox.html', {
+        'users': users,
+        'selected_user': selected_user,
+        'messages': messages
+    })
+
+@login_required
+def deleteMsg(request, username, id):
+    selected_user = None
+
+    if username:
+        selected_user = get_object_or_404(User, username=username)
+
+    message = get_object_or_404(Message, id=id)
+    message.delete()
     
+    return redirect('job_inbox', username=selected_user.username)
+
 
 

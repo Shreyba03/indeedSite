@@ -1,0 +1,31 @@
+<div class="messaging-container" style="display: flex;">
+    <div class="sidebar" style="width: 25%; border-right: 1px solid #ddd; padding: 10px;">
+        <h3>Users</h3>
+        <ul>
+            {% for user in users %}
+                <li><a href="{% url 'job_inbox' user.username %}">{{ user.username }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="chat-area" style="flex-grow: 1; padding: 10px;">
+        {% if selected_user %}
+            <h3>Chat with {{ selected_user.username }}</h3>
+            <div class="messages">
+                {% for msg in messages %}
+                    <p><strong>{{ msg.sender.username }}:</strong> {{ msg.content }}</p>
+                    {% if msg.sender.username == user.username %}
+                        <a href="{% url 'job_delete_msg' selected_user.username msg.id %}">Delete</a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <textarea name="message" rows="2" style="width: 100%;"></textarea>
+                <button type="submit">Send</button>
+            </form>
+        {% else %}
+            <p>Select a user to start chatting.</p>
+        {% endif %}
+    </div>
+</div>
