@@ -10,7 +10,7 @@ class Profile(models.Model):
     #skills = models.TextField(blank=True, help_text="Comma-separated list of skills")
     education = models.TextField(blank=True)
     #experience = models.TextField(blank=True)
-    location = models.CharField(max_length=255)
+    location = models.CharField(max_length=255, blank = True)
 
     # FOR MAP
     latitude = models.FloatField(null=True, blank=True)

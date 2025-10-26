@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from .models import Job, Profile, Application, Skill, Experience, Message
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from .forms import ProfileForm, JobForm
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 import requests
+import csv
+from django.contrib import messages
 
 def index(request):
     jobs = Job.objects.all()
@@ -44,12 +46,6 @@ def profile(request, user_id):
     profile = get_object_or_404(Profile, user=user)
     
     applications = Application.objects.filter(user=user).select_related('job')
-    
-    '''
-    skills_list = []
-    if profile.skills:
-        skills_list = [skill.strip() for skill in profile.skills.split(',') if skill.strip()]
-    ''' 
 
     template_data = {}
     template_data['profile'] = profile
@@ -164,18 +160,25 @@ def job_detail(request, id):
     job = get_object_or_404(Job, id=id)
     return render(request, "jobs/job_detail.html", {"job": job})
 
-# @login_required
+@login_required
 def apply_to_job(request, id):
     job = get_object_or_404(Job, id=id)
+
+    # Check if user already applied to this job
+    existing_application = Application.objects.filter(user=request.user, job=job).first()
+    if existing_application:
+        messages.warning(request, "You have already applied to this job.")
+        return redirect("job_detail", id=job.id)
 
     if request.method == "POST":
         note = request.POST.get("note", "")
         Application.objects.create(user=request.user, job=job, note=note, status="Applied")
+        messages.success(request, "Your application has been submitted!")
         return redirect("job_detail", id=job.id)
 
     return render(request, "jobs/apply.html", {"job": job})
 
-# @login_required
+@login_required
 def my_applications(request):
     # Get all applications for the logged-in user
     applications = Application.objects.filter(user=request.user).order_by('-applied_at')
@@ -225,25 +228,25 @@ def get_lat_long(city_name):
 
 def create_job(request):
     if not request.user.is_authenticated:
-        return redirect('accounts.login')  # only logged-in users can create jobs
+        return redirect('accounts.login')
+
+    profile = Profile.objects.get(user=request.user)
+    if not profile.is_recruiter:
+        return redirect('home.index')  # block non-recruiters
 
     if request.method == 'POST':
         form = JobForm(request.POST)
         if form.is_valid():
             job = form.save(commit=False)
-
-            # Automatically convert city to latitude and longitude
             lat, lon = get_lat_long(job.location)
             job.latitude = lat
             job.longitude = lon
-
             job.save()
-            return redirect('job_list')  # redirect to a job detail page
+            return redirect('job_list')
     else:
         form = JobForm()
 
     return render(request, 'jobs/create_job.html', {'form': form})
-
 
 def user_list(request):
     search_term = request.GET.get('search', '')
@@ -335,3 +338,60 @@ def recommended_users(request, id):
     }
 
     return render(request, 'jobs/recommended_users.html', {'template_data':template_data})
+
+@login_required
+def recruiter_pipeline(request):
+    """Display applications grouped by status."""
+    # If recruiters have profiles with company info, filter by company
+    if hasattr(request.user, 'profile') and request.user.profile.is_recruiter:
+        company = request.user.profile.company
+        jobs = Job.objects.filter(company=company)
+        applications = Application.objects.filter(job__in=jobs)
+    else:
+        applications = Application.objects.all()
+
+    # Group by status
+    status_groups = {}
+    for code, label in Application.STATUS_CHOICES:
+        status_groups[label] = applications.filter(status=code)
+
+    return render(request, 'jobs/recruiter_pipeline.html', {
+        'status_groups': status_groups
+    })
+
+
+@login_required
+def update_application_status(request, app_id):
+    """Handle AJAX drag-and-drop updates."""
+    if request.method == "POST":
+        new_status = request.POST.get("status")
+        app = get_object_or_404(Application, id=app_id)
+        app.status = new_status
+        app.save()
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False}, status=400)
+
+##################################################
+# ADMIN VIEWS
+##################################################
+
+@user_passes_test(lambda u: u.is_staff)
+def export_applications_csv(request):
+    """Admin-only CSV export."""
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="applications.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Username', 'Job Title', 'Company', 'Status', 'Applied At', 'Note'])
+
+    for app in Application.objects.select_related('user', 'job'):
+        writer.writerow([
+            app.user.username,
+            app.job.title,
+            app.job.company,
+            app.get_status_display(),
+            app.applied_at.strftime("%Y-%m-%d"),
+            app.note
+        ])
+
+    return response

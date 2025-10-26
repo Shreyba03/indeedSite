@@ -19,13 +19,23 @@
       
       {% if user.is_authenticated %}
         {% if template_data.profile.is_recruiter %}
-          <a class="btn btn-info" href="{%url 'profile.index' request.user.id%}">Your Recruiter Profile</a>
-          <a class="btn btn-danger" href="{%url 'accounts.logout'%}">Logout {{user.username}}</a>
-          <a class="btn btn-primary" href="{%url 'recommended_jobs'%}">See Recommended Jobs</a>
+          <!-- Recruiter options -->
+          <a class="btn btn-info" href="{% url 'profile.index' request.user.id %}">Your Recruiter Profile</a>
+          <a class="btn btn-warning" href="{% url 'recruiter_pipeline' %}">Recruiter Pipeline</a>
+          <a class="btn btn-danger" href="{% url 'accounts.logout' %}">Logout {{ user.username }}</a>
+          <a class="btn btn-primary" href="{% url 'recommended_jobs' %}">See Recommended Jobs</a>
+          <a class="btn btn-success" href="{% url 'job.create' %}">Create Job Post</a>
+
+        {% elif user.is_superuser %}
+          <!-- Admin options -->
+          <a class="btn btn-dark" href="{% url 'export_applications_csv' %}">Export Applications (CSV)</a>
+          <a class="btn btn-danger" href="{% url 'accounts.logout' %}">Logout {{ user.username }}</a>
+
         {% else %}
-          <a class="btn btn-info" href="{%url 'profile.index' request.user.id%}">Your Profile</a>
-          <a class="btn btn-danger" href="{%url 'accounts.logout'%}">Logout {{user.username}}</a>
-          <a class="btn btn-primary" href="{%url 'recommended_jobs'%}">See Recommended Jobs</a>
+          <!-- Normal user options -->
+          <a class="btn btn-info" href="{% url 'profile.index' request.user.id %}">Your Profile</a>
+          <a class="btn btn-danger" href="{% url 'accounts.logout' %}">Logout {{ user.username }}</a>
+          <a class="btn btn-primary" href="{% url 'recommended_jobs' %}">See Recommended Jobs</a>
         {% endif %}
       {% else %}
         <a class="btn btn-success" href="{%url 'accounts.login'%}">Login</a>

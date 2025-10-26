@@ -1,0 +1,42 @@
+<h2>Recruiter Pipeline</h2>
+
+<div class="kanban-container" style="display:flex; gap:20px;">
+  {% for status, apps in status_groups.items %}
+    <div class="kanban-column" style="flex:1; border:1px solid #ccc; padding:10px;">
+      <h3>{{ status }}</h3>
+      <ul class="kanban-list" data-status="{{ status|lower|slugify }}">
+        {% for app in apps %}
+          <li draggable="true" data-id="{{ app.id }}" style="border:1px solid #888; margin:5px; padding:5px;">
+            <strong>{{ app.user.username }}</strong><br>
+            {{ app.job.title }}<br>
+            <small>{{ app.job.company }}</small>
+          </li>
+        {% empty %}
+          <p>No applicants</p>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
+</div>
+
+<script>
+document.querySelectorAll('.kanban-list li').forEach(item => {
+  item.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('id', e.target.dataset.id);
+  });
+});
+
+document.querySelectorAll('.kanban-list').forEach(list => {
+  list.addEventListener('dragover', e => e.preventDefault());
+  list.addEventListener('drop', async e => {
+    const appId = e.dataTransfer.getData('id');
+    const newStatus = e.currentTarget.dataset.status;
+    await fetch(`/jobs/pipeline/update/${appId}/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+      body: new URLSearchParams({ 'status': newStatus })
+    });
+    location.reload();
+  });
+});
+</script>

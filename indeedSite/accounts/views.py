@@ -7,28 +7,28 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from jobs.models import Profile
 
-# Create your views here.
 def signup(request):
-    template_data = {}
-    template_data['title'] = 'Sign Up'
+    template_data = {'title': 'Sign Up'}
+
     if request.method == 'GET':
         template_data['form'] = CustomUserCreationForm()
-        return render(request, 'accounts/signup.html',
-            {'template_data': template_data})
+        return render(request, 'accounts/signup.html', {'template_data': template_data})
+
     elif request.method == 'POST':
         form = CustomUserCreationForm(request.POST, error_class=CustomErrorList)
         if form.is_valid():
             user = form.save()
-            profile = Profile()
-            profile.user = user
-            profile.is_recruiter = form.cleaned_data['is_recruiter']
-            profile.company = form.cleaned_data['company']
+
+            # ✅ Only create if not already existing
+            profile, created = Profile.objects.get_or_create(user=user)
+            profile.is_recruiter = form.cleaned_data.get('is_recruiter', False)
+            profile.company = form.cleaned_data.get('company', "")
             profile.save()
+
             return redirect('home.index')
         else:
             template_data['form'] = form
-            return render(request, 'accounts/signup.html',
-                {'template_data': template_data})
+            return render(request, 'accounts/signup.html', {'template_data': template_data})
         
 def login(request):
     template_data = {}
