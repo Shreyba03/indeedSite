@@ -1,77 +1,232 @@
-<div class="p-3 mt-4">
-  <div class="container">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - IndeedLite</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  {% load static %}
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'home.index' %}">
+        <i class="fas fa-briefcase"></i>
+        IndeedLite
+      </a>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'job_list' %}">
+              <i class="fas fa-briefcase"></i>
+              Jobs
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'job_map_page' %}">
+              <i class="fas fa-map-marker-alt"></i>
+              Job Map
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'accounts.login' %}">
+              <i class="fas fa-sign-in-alt"></i>
+              Login
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="{% url 'accounts.signup' %}">
+              <i class="fas fa-user-plus"></i>
+              Sign Up
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-content">
+        <h1 class="hero-title">Join IndeedLite</h1>
+        <p class="hero-subtitle">Create your account and start your journey to find the perfect career opportunity.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <div class="container mt-5">
     <div class="row justify-content-center">
-      <div class="col-md-8">
-        <div class="card shadow p-3 mb-4 rounded">
-          <div class="card-body">
-            <h2>Sign Up</h2>
-            <hr />
-            <form method="POST">
-              {% csrf_token %}
+      <div class="col-lg-8 col-md-10">
+        <!-- Sign Up Form -->
+        <div class="section-header">
+          <i class="fas fa-user-plus"></i>
+          Create Account
+        </div>
+        <div class="section-content">
+          <div class="card">
+            <div class="card-body">
+              <form method="POST">
+                {% csrf_token %}
 
-              <!-- Username -->
-              <div class="mb-3">
-                {{ template_data.form.username.label_tag }}
-                {{ template_data.form.username }}
-                {% if template_data.form.username.errors %}
-                  <div class="text-danger">{{ template_data.form.username.errors }}</div>
-                {% endif %}
+                <!-- Username -->
+                <div class="mb-4">
+                  <label for="id_username" class="form-label">
+                    <i class="fas fa-user me-2"></i>Username
+                  </label>
+                  {{ template_data.form.username }}
+                  {% if template_data.form.username.errors %}
+                    <div class="text-danger small mt-1">
+                      {% for error in template_data.form.username.errors %}
+                        <div>{{ error }}</div>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <div class="form-text">Choose a unique username for your account</div>
+                </div>
+
+                <!-- Password1 -->
+                <div class="mb-4">
+                  <label for="id_password1" class="form-label">
+                    <i class="fas fa-lock me-2"></i>Password
+                  </label>
+                  {{ template_data.form.password1 }}
+                  {% if template_data.form.password1.errors %}
+                    <div class="text-danger small mt-1">
+                      {% for error in template_data.form.password1.errors %}
+                        <div>{{ error }}</div>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <div class="form-text">Create a strong password with at least 8 characters</div>
+                </div>
+
+                <!-- Password2 -->
+                <div class="mb-4">
+                  <label for="id_password2" class="form-label">
+                    <i class="fas fa-lock me-2"></i>Confirm Password
+                  </label>
+                  {{ template_data.form.password2 }}
+                  {% if template_data.form.password2.errors %}
+                    <div class="text-danger small mt-1">
+                      {% for error in template_data.form.password2.errors %}
+                        <div>{{ error }}</div>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                  <div class="form-text">Re-enter your password to confirm</div>
+                </div>
+
+                <!-- Account Type Selection -->
+                <div class="mb-4">
+                  <h5 class="text-gt-navy mb-3">
+                    <i class="fas fa-user-tag me-2"></i>Account Type
+                  </h5>
+                  <div class="form-check mb-3">
+                    {{ template_data.form.is_recruiter }}
+                    <label for="id_is_recruiter" class="form-check-label">
+                      <i class="fas fa-building me-2"></i>I am a Recruiter
+                    </label>
+                    <div class="form-text">Check this if you're looking to hire candidates</div>
+                  </div>
+                </div>
+
+                <!-- Company Field (hidden by default) -->
+                <div class="mb-4" id="company-field" style="display: none;">
+                  <label for="id_company" class="form-label">
+                    <i class="fas fa-building me-2"></i>Company Name
+                  </label>
+                  {{ template_data.form.company }}
+                  <div class="form-text">Enter the name of your company</div>
+                </div>
+
+                <!-- Sign Up Button -->
+                <div class="d-grid gap-2 mb-4">
+                  <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Create Account
+                  </button>
+                </div>
+
+                <!-- Login Link -->
+                <div class="text-center">
+                  <p class="text-muted mb-0">Already have an account?</p>
+                  <a href="{% url 'accounts.login' %}" class="btn btn-outline-primary mt-2">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    Sign In
+                  </a>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Sign Up Benefits -->
+          <div class="row mt-4">
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-body text-center">
+                  <i class="fas fa-search fa-2x text-gt-gold mb-3"></i>
+                  <h5>Find Jobs</h5>
+                  <p class="text-muted">Discover thousands of job opportunities from top companies worldwide.</p>
+                </div>
               </div>
-
-              <!-- Password1 -->
-              <div class="mb-3">
-                {{ template_data.form.password1.label_tag }}
-                {{ template_data.form.password1 }}
-                {% if template_data.form.password1.errors %}
-                  <div class="text-danger">{{ template_data.form.password1.errors }}</div>
-                {% endif %}
+            </div>
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-body text-center">
+                  <i class="fas fa-user-circle fa-2x text-gt-gold mb-3"></i>
+                  <h5>Build Profile</h5>
+                  <p class="text-muted">Create a professional profile that showcases your skills and experience.</p>
+                </div>
               </div>
-
-              <!-- Password2 -->
-              <div class="mb-3">
-                {{ template_data.form.password2.label_tag }}
-                {{ template_data.form.password2 }}
-                {% if template_data.form.password2.errors %}
-                  <div class="text-danger">{{ template_data.form.password2.errors }}</div>
-                {% endif %}
+            </div>
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-body text-center">
+                  <i class="fas fa-map-marker-alt fa-2x text-gt-gold mb-3"></i>
+                  <h5>Job Map</h5>
+                  <p class="text-muted">Explore job opportunities by location on our interactive map.</p>
+                </div>
               </div>
-
-              <!-- Is Recruiter Checkbox -->
-              <div class="form-check mb-3">
-                {{ template_data.form.is_recruiter }}
-                {{ template_data.form.is_recruiter.label_tag }}
-              </div>
-
-              <!-- Company Field (hidden by default) -->
-              <div class="mb-3" id="company-field" style="display: none;">
-                {{ template_data.form.company.label_tag }}
-                {{ template_data.form.company }}
-              </div>
-
-              <button type="submit" class="btn bg-dark text-white">Sign Up</button>
-            </form>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- JavaScript to toggle the company field -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const checkbox = document.getElementById('id_is_recruiter');
-    const companyField = document.getElementById('company-field');
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    function toggleCompany() {
-        if (checkbox.checked) {
-            companyField.style.display = 'block';
-        } else {
-            companyField.style.display = 'none';
+  <!-- JavaScript to toggle the company field -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkbox = document.getElementById('id_is_recruiter');
+        const companyField = document.getElementById('company-field');
+
+        function toggleCompany() {
+            if (checkbox.checked) {
+                companyField.style.display = 'block';
+            } else {
+                companyField.style.display = 'none';
+            }
         }
-    }
 
-    checkbox.addEventListener('change', toggleCompany);
-    toggleCompany(); // initialize on page load
-});
-</script>
+        checkbox.addEventListener('change', toggleCompany);
+        toggleCompany(); // initialize on page load
+    });
+  </script>
+</body>
+</html>

@@ -3,89 +3,239 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edit Work Experience</title>
-
+  <title>Edit Work Experience - IndeedLite</title>
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  {% load static %}
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
 </head>
 <body>
-  <div class="container mt-5" style="max-width: 700px;">
-
-    <h2 class="mb-4">Edit Work Experience</h2>
-
-    <!-- Existing Experiences -->
-    {% if experiences %}
-      <ul class="list-group mb-4">
-        {% for exp in experiences %}
-          <li class="list-group-item d-flex justify-content-between align-items-start">
-            <div>
-              <h5 class="mb-1">{{ exp.position }} at {{ exp.company }}
-                {% if exp.is_current %}
-                  <span class="badge bg-success ms-2">Current</span>
-                {% endif %}
-              </h5>
-              <small class="text-muted">
-                {{ exp.start_date|date:"M Y" }} -
-                {% if exp.is_current %}
-                  Present
-                {% else %}
-                  {{ exp.end_date|date:"M Y" }}
-                {% endif %}
-              </small>
-              {% if exp.description %}
-                <p class="mt-2 mb-0">{{ exp.description }}</p>
-              {% endif %}
-            </div>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'home.index' %}">
+        <i class="fas fa-briefcase"></i>
+        IndeedLite
+      </a>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'job_list' %}">
+              <i class="fas fa-briefcase"></i>
+              Jobs
+            </a>
           </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="text-muted mb-4">No work experience added yet.</p>
-    {% endif %}
-
-    <!-- Add New Experience Form -->
-    <form method="POST" class="p-4 border rounded bg-light shadow-sm">
-      {% csrf_token %}
-
-      <h4 class="mb-3">Add New Experience</h4>
-
-      <div class="mb-3">
-        <label for="company" class="form-label">Company</label>
-        <input type="text" name="company" id="company" class="form-control" placeholder="Company" required>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'job_map_page' %}">
+              <i class="fas fa-map-marker-alt"></i>
+              Job Map
+            </a>
+          </li>
+          {% if user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link active" href="{% url 'profile.index' request.user.id %}">
+                <i class="fas fa-user"></i>
+                Profile
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.logout' %}">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+              </a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.login' %}">
+                <i class="fas fa-sign-in-alt"></i>
+                Login
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.signup' %}">
+                <i class="fas fa-user-plus"></i>
+                Sign Up
+              </a>
+            </li>
+          {% endif %}
+        </ul>
       </div>
+    </div>
+  </nav>
 
-      <div class="mb-3">
-        <label for="position" class="form-label">Position</label>
-        <input type="text" name="position" id="position" class="form-control" placeholder="Position" required>
-      </div>
+  <!-- Main Content -->
+  <div class="container mt-5">
+    <!-- Back Button -->
+    <div class="mb-4">
+      <a class="btn btn-secondary" href="{% url 'profile.index' profile.user.id %}">
+        <i class="fas fa-arrow-left"></i>
+        Back to Profile
+      </a>
+    </div>
 
-      <div class="mb-3">
-        <label for="description" class="form-label">Description</label>
-        <textarea name="description" id="description" class="form-control" rows="3" placeholder="Description"></textarea>
-      </div>
+    <!-- Edit Experience -->
+    <div class="section-header">
+      <i class="fas fa-briefcase"></i>
+      Edit Work Experience
+    </div>
+    <div class="section-content">
+      <div class="row justify-content-center">
+        <div class="col-lg-10">
+          <!-- Current Experiences -->
+          {% if experiences %}
+            <div class="card mb-4">
+              <div class="card-header bg-gt-navy text-white">
+                <h5 class="mb-0">
+                  <i class="fas fa-history"></i>
+                  Current Work Experience
+                </h5>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  {% for exp in experiences %}
+                    <div class="col-lg-6 mb-3">
+                      <div class="card h-100">
+                        <div class="card-body">
+                          <h6 class="card-title text-gt-navy">{{ exp.position }}</h6>
+                          <h6 class="card-subtitle mb-2 text-gt-gold">{{ exp.company }}</h6>
+                          <p class="text-muted small mb-2">
+                            <i class="fas fa-calendar text-gt-gold me-1"></i>
+                            {{ exp.start_date|date:"M Y" }} -
+                            {% if exp.is_current %}
+                              <span class="badge bg-success">Current</span>
+                            {% else %}
+                              {{ exp.end_date|date:"M Y" }}
+                            {% endif %}
+                          </p>
+                          {% if exp.description %}
+                            <p class="card-text small">{{ exp.description|truncatewords:20 }}</p>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <div class="alert alert-info text-center mb-4">
+              <i class="fas fa-briefcase fa-2x mb-3 text-gt-gold"></i>
+              <h5>No work experience added yet</h5>
+              <p>Start building your professional experience profile below.</p>
+            </div>
+          {% endif %}
 
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label for="start_date" class="form-label">Start Date</label>
-          <input type="date" name="start_date" id="start_date" class="form-control" required>
+          <!-- Add New Experience Form -->
+          <div class="card">
+            <div class="card-header bg-gt-gold text-white">
+              <h5 class="mb-0">
+                <i class="fas fa-plus-circle"></i>
+                Add New Experience
+              </h5>
+            </div>
+            <div class="card-body">
+              <form method="POST">
+                {% csrf_token %}
+                
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="company" class="form-label">
+                      <i class="fas fa-building me-2"></i>Company
+                    </label>
+                    <input type="text" name="company" id="company" class="form-control" placeholder="e.g., Google, Microsoft" required>
+                    <div class="form-text">Enter the company name where you worked</div>
+                  </div>
+                  
+                  <div class="col-md-6 mb-3">
+                    <label for="position" class="form-label">
+                      <i class="fas fa-user-tie me-2"></i>Position
+                    </label>
+                    <input type="text" name="position" id="position" class="form-control" placeholder="e.g., Software Engineer, Manager" required>
+                    <div class="form-text">Enter your job title or position</div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="description" class="form-label">
+                    <i class="fas fa-align-left me-2"></i>Description
+                  </label>
+                  <textarea name="description" id="description" class="form-control" rows="4" placeholder="Describe your responsibilities, achievements, and key contributions in this role..."></textarea>
+                  <div class="form-text">Highlight your key responsibilities and achievements</div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="start_date" class="form-label">
+                      <i class="fas fa-calendar-plus me-2"></i>Start Date
+                    </label>
+                    <input type="date" name="start_date" id="start_date" class="form-control" required>
+                  </div>
+                  
+                  <div class="col-md-6 mb-3">
+                    <label for="end_date" class="form-label">
+                      <i class="fas fa-calendar-minus me-2"></i>End Date
+                    </label>
+                    <input type="date" name="end_date" id="end_date" class="form-control">
+                    <div class="form-text">Leave blank if currently working here</div>
+                  </div>
+                </div>
+
+                <div class="form-check mb-4">
+                  <input type="checkbox" name="is_current" id="is_current" class="form-check-input">
+                  <label for="is_current" class="form-check-label">
+                    <i class="fas fa-check-circle me-2"></i>I currently work here
+                  </label>
+                </div>
+
+                <div class="d-flex gap-3">
+                  <button type="submit" class="btn btn-success">
+                    <i class="fas fa-plus"></i>
+                    Add Experience
+                  </button>
+                  <a href="{% url 'profile.index' profile.user.id %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                  </a>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Experience Tips -->
+          <div class="row mt-4">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-body text-center">
+                  <i class="fas fa-lightbulb fa-2x text-gt-gold mb-3"></i>
+                  <h5>Experience Tips</h5>
+                  <p class="text-muted">Focus on quantifiable achievements and specific responsibilities that showcase your skills.</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-body text-center">
+                  <i class="fas fa-chart-line fa-2x text-gt-gold mb-3"></i>
+                  <h5>Career Growth</h5>
+                  <p class="text-muted">Show progression in your roles and highlight how each position built upon the previous one.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="col-md-6">
-          <label for="end_date" class="form-label">End Date</label>
-          <input type="date" name="end_date" id="end_date" class="form-control">
-        </div>
       </div>
-
-      <div class="form-check mb-3">
-        <input type="checkbox" name="is_current" id="is_current" class="form-check-input">
-        <label for="is_current" class="form-check-label">Currently working here</label>
-      </div>
-
-      <button type="submit" class="btn btn-primary">Add Experience</button>
-    </form>
-    <a href="{% url 'profile.index' profile.user.id %}" class="btn btn-primary">Back</a>
+    </div>
   </div>
 
-  <!-- Bootstrap JS Bundle -->
+  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

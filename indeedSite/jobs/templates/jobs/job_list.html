@@ -1,163 +1,224 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Job Listings</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f8f9fa;
-      margin: 0;
-      padding: 0;
-      color: #333;
-    }
-
-    h1 {
-      background: #007bff;
-      color: white;
-      padding: 20px;
-      margin: 0;
-      text-align: center;
-    }
-
-    form {
-      background: white;
-      padding: 20px;
-      margin: 20px auto;
-      max-width: 800px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-    }
-
-    form label {
-      font-weight: bold;
-      margin-bottom: 5px;
-      display: block;
-    }
-
-    form input[type="text"],
-    form input[type="number"] {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
-    form input[type="checkbox"] {
-      margin-right: 5px;
-    }
-
-    form button {
-      grid-column: span 2;
-      padding: 10px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-
-    form button:hover {
-      background: #0056b3;
-    }
-
-    hr {
-      max-width: 800px;
-      margin: 30px auto;
-      border: 0;
-      height: 1px;
-      background: #ddd;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      max-width: 800px;
-      margin: 20px auto;
-    }
-
-    li {
-      background: white;
-      margin-bottom: 15px;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    li:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    a {
-      text-decoration: none;
-      color: #007bff;
-      font-weight: bold;
-    }
-
-    a:hover {
-      color: #0056b3;
-    }
-
-    p {
-      text-align: center;
-      font-size: 18px;
-      color: #555;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Listings - IndeedLite</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  {% load static %}
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
 </head>
 <body>
-  <h1>Available Jobs</h1>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'home.index' %}">
+        <i class="fas fa-briefcase"></i>
+        IndeedLite
+      </a>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link active" href="{% url 'job_list' %}">
+              <i class="fas fa-briefcase"></i>
+              Jobs
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'job_map_page' %}">
+              <i class="fas fa-map-marker-alt"></i>
+              Job Map
+            </a>
+          </li>
+          {% if user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'profile.index' request.user.id %}">
+                <i class="fas fa-user"></i>
+                Profile
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.logout' %}">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+              </a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.login' %}">
+                <i class="fas fa-sign-in-alt"></i>
+                Login
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.signup' %}">
+                <i class="fas fa-user-plus"></i>
+                Sign Up
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
 
-  <form method="get" action="">
-    <label for="title">Job Title:</label>
-    <input type="text" id="title" name="title" value="{{ request.GET.title }}">
-
-    <label for="skills">Skills:</label>
-    <input type="text" id="skills" name="skills" value="{{ request.GET.skills }}">
-
-    <label for="location">Location:</label>
-    <input type="text" id="location" name="location" value="{{ request.GET.location }}">
-
-    <label for="salary_min">Min Salary:</label>
-    <input type="number" id="salary_min" name="salary_min" value="{{ request.GET.salary_min }}">
-
-    <label for="salary_max">Max Salary:</label>
-    <input type="number" id="salary_max" name="salary_max" value="{{ request.GET.salary_max }}">
-
-    <label>
-      <input type="checkbox" name="remote" value="1" {% if request.GET.remote %}checked{% endif %}>
-      Remote
-    </label>
-
-    <label>
-      <input type="checkbox" name="visa" value="1" {% if request.GET.visa %}checked{% endif %}>
-      Visa Sponsorship
-    </label>
-
-    <button type="submit">Search</button>
-    <a href="{% url 'home.index' %}" class="btn btn-primary btn-sm d-inline-block mt-2">Home</a>
-  </form>
-
-  <hr>
-
-  {% if jobs %}
-    <ul>
-      {% for job in jobs %}
-        <li>
-          <a href="{% url 'job_detail' job.id %}">
-            {{ job.title }} at {{ job.company }} ({{ job.location }})
+  <!-- Main Content -->
+  <div class="container mt-5">
+    <!-- Page Header -->
+    <div class="section-header">
+      <i class="fas fa-search"></i>
+      Job Search
+    </div>
+    <div class="section-content">
+      <!-- Search Form -->
+      <form method="get" action="" class="row g-3 mb-4">
+        <div class="col-md-4">
+          <label for="title" class="form-label">Job Title</label>
+          <input type="text" class="form-control" id="title" name="title" value="{{ request.GET.title }}" placeholder="e.g. Software Engineer">
+        </div>
+        <div class="col-md-4">
+          <label for="skills" class="form-label">Skills</label>
+          <input type="text" class="form-control" id="skills" name="skills" value="{{ request.GET.skills }}" placeholder="e.g. Python, React">
+        </div>
+        <div class="col-md-4">
+          <label for="location" class="form-label">Location</label>
+          <input type="text" class="form-control" id="location" name="location" value="{{ request.GET.location }}" placeholder="e.g. Atlanta, GA">
+        </div>
+        <div class="col-md-3">
+          <label for="salary_min" class="form-label">Min Salary</label>
+          <input type="number" class="form-control" id="salary_min" name="salary_min" value="{{ request.GET.salary_min }}" placeholder="50000">
+        </div>
+        <div class="col-md-3">
+          <label for="salary_max" class="form-label">Max Salary</label>
+          <input type="number" class="form-control" id="salary_max" name="salary_max" value="{{ request.GET.salary_max }}" placeholder="100000">
+        </div>
+        <div class="col-md-3">
+          <div class="form-check mt-4">
+            <input class="form-check-input" type="checkbox" id="remote" name="remote" value="1" {% if request.GET.remote %}checked{% endif %}>
+            <label class="form-check-label" for="remote">
+              Remote Work
+            </label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-check mt-4">
+            <input class="form-check-input" type="checkbox" id="visa" name="visa" value="1" {% if request.GET.visa %}checked{% endif %}>
+            <label class="form-check-label" for="visa">
+              Visa Sponsorship
+            </label>
+          </div>
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-search"></i>
+            Search Jobs
+          </button>
+          <a href="{% url 'home.index' %}" class="btn btn-secondary ms-2">
+            <i class="fas fa-home"></i>
+            Back to Home
           </a>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>No jobs found.</p>
-  {% endif %}
+        </div>
+      </form>
+    </div>
+
+    <!-- Job Results -->
+    {% if jobs %}
+      <div class="section-header mt-4">
+        <i class="fas fa-briefcase"></i>
+        Available Jobs ({{ jobs|length }} found)
+      </div>
+      <div class="section-content">
+        <div class="row">
+          {% for job in jobs %}
+            <div class="col-lg-6 mb-4">
+              <div class="job-card">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <h5 class="job-title">{{ job.title }}</h5>
+                    <p class="text-muted mb-1">
+                      <i class="fas fa-building text-gt-gold"></i>
+                      {{ job.company }}
+                    </p>
+                    <p class="text-muted mb-1">
+                      <i class="fas fa-map-marker-alt text-gt-gold"></i>
+                      {{ job.location }}
+                    </p>
+                  </div>
+                  <div class="text-end">
+                    <span class="job-salary">${{ job.salary_min|floatformat:0 }} - ${{ job.salary_max|floatformat:0 }}</span>
+                  </div>
+                </div>
+                
+                {% if job.skills_required %}
+                  <div class="mb-3">
+                    <small class="text-muted">Required Skills:</small>
+                    <div class="mt-1">
+                      <span class="badge bg-gt-gold me-1">{{ job.skills_required }}</span>
+                    </div>
+                  </div>
+                {% endif %}
+                
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                  {% if job.remote %}
+                    <span class="badge bg-success">
+                      <i class="fas fa-home"></i>
+                      Remote
+                    </span>
+                  {% endif %}
+                  {% if job.visa_sponsorship %}
+                    <span class="badge bg-info">
+                      <i class="fas fa-passport"></i>
+                      Visa Sponsorship
+                    </span>
+                  {% endif %}
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                  <a href="{% url 'job_detail' job.id %}" class="btn btn-primary">
+                    <i class="fas fa-eye"></i>
+                    View Details
+                  </a>
+                  {% if user.is_authenticated %}
+                    <a href="{% url 'apply_to_job' job.id %}" class="btn btn-success">
+                      <i class="fas fa-paper-plane"></i>
+                      Apply Now
+                    </a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+      <div class="section-header mt-4">
+        <i class="fas fa-search"></i>
+        Search Results
+      </div>
+      <div class="section-content">
+        <div class="alert alert-info text-center" role="alert">
+          <i class="fas fa-info-circle fa-2x mb-3 text-gt-gold"></i>
+          <h4>No jobs found</h4>
+          <p>Try adjusting your search criteria or check back later for new job postings.</p>
+          <a href="{% url 'home.index' %}" class="btn btn-primary">
+            <i class="fas fa-home"></i>
+            Back to Home
+          </a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

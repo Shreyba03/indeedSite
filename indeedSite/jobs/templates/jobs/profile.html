@@ -3,162 +3,331 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ template_data.owner.username }}'s Profile</title>
+  <title>{{ template_data.owner.username }}'s Profile - IndeedLite</title>
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  {% load static %}
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
 </head>
 <body>
-  <div class="container mt-5">
-        
-        <!-- Header Section -->
-        <div class="mb-4">
-          <h1 class="text-dark">{{ template_data.profile.headline }}</h1>
-          <p class="text-muted">{{ template_data.owner.username }}'s Profile</p>
-        </div>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'home.index' %}">
+        <i class="fas fa-briefcase"></i>
+        IndeedLite
+      </a>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'job_list' %}">
+              <i class="fas fa-briefcase"></i>
+              Jobs
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'job_map_page' %}">
+              <i class="fas fa-map-marker-alt"></i>
+              Job Map
+            </a>
+          </li>
+          {% if user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link active" href="{% url 'profile.index' request.user.id %}">
+                <i class="fas fa-user"></i>
+                Profile
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.logout' %}">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+              </a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.login' %}">
+                <i class="fas fa-sign-in-alt"></i>
+                Login
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.signup' %}">
+                <i class="fas fa-user-plus"></i>
+                Sign Up
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
 
-        <!-- Skills Section -->
-        <div class="mb-4">
-          <h3 class="text-primary mb-3">Skills</h3>
-          <div style="max-width: 600px;">
-            {% if template_data.profile.skill_list.all %}
-              <div class="list-group">
-                {% for skill in template_data.profile.skill_list.all %}
-                  <div class="list-group-item mb-2 p-2 border rounded d-flex justify-content-between align-items-center">
-                    <span>{{ skill.name }}</span>
-                    <span class="badge bg-secondary">{{ skill.proficiency }}</span>
-                  </div>
-                {% endfor %}
-                {% if request.user.id == template_data.profile.user.id %}
-                  <a href="{% url 'skills.edit' template_data.profile.user.id %}" class="btn btn-primary btn-sm d-inline-block mt-2">Edit Skills</a>
-                {% endif %}
-              </div>
-            {% elif template_data.profile.skills %}
-              <p>{{ template_data.profile.skills }}</p>
-            {% else %}
-              <p class="text-muted">No skills added yet.</p>
-              {% if request.user.id == template_data.profile.user.id %}
-                  <a href="{% url 'skills.edit' template_data.profile.user.id %}" class="btn btn-primary">Edit Skills</a>
+  <!-- Main Content -->
+  <div class="container mt-5">
+    <!-- Profile Header -->
+    <div class="section-header">
+      <i class="fas fa-user"></i>
+      {{ template_data.owner.username }}'s Profile
+    </div>
+    <div class="section-content">
+      <!-- Profile Overview -->
+      <div class="row mb-4">
+        <div class="col-lg-8">
+          <div class="profile-card">
+            <div class="profile-avatar mb-3">
+              {{ template_data.owner.username|first|upper }}
+            </div>
+            <h1 class="text-gt-navy mb-2">{{ template_data.profile.headline|default:template_data.owner.username }}</h1>
+            <p class="text-muted mb-3">{{ template_data.owner.username }}'s Professional Profile</p>
+            
+            <!-- Contact Information -->
+            <div class="row">
+              {% if template_data.profile.show_email and template_data.profile.email %}
+                <div class="col-md-6 mb-2">
+                  <i class="fas fa-envelope text-gt-gold me-2"></i>
+                  <a href="mailto:{{ template_data.profile.email }}" class="text-decoration-none">
+                    {{ template_data.profile.email }}
+                  </a>
+                </div>
               {% endif %}
-            {% endif %}
+              {% if template_data.profile.show_phone and template_data.profile.phone_number %}
+                <div class="col-md-6 mb-2">
+                  <i class="fas fa-phone text-gt-gold me-2"></i>
+                  <a href="tel:{{ template_data.profile.phone_number }}" class="text-decoration-none">
+                    {{ template_data.profile.phone_number }}
+                  </a>
+                </div>
+              {% endif %}
+            </div>
           </div>
         </div>
         
-
-        <!-- Education Section -->
-        <div class="mb-4">
-          <h3 class="text-primary mb-3">Education</h3>
-          {% if template_data.profile.education %}
-            <p>{{ template_data.profile.education }}</p>
-          {% else %}
-            <p class="text-muted">No education information added yet.</p>
-          {% endif %}
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-header bg-gt-gold text-white">
+              <h5 class="mb-0">
+                <i class="fas fa-cog"></i>
+                Quick Actions
+              </h5>
+            </div>
+            <div class="card-body">
+              {% if template_data.owner.id == template_data.profile.user.id %}
+                <div class="d-grid gap-2">
+                  <a href="{% url 'profile.edit' template_data.owner.id %}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i>
+                    Edit Profile
+                  </a>
+                  <a href="{% url 'skills.edit' template_data.owner.id %}" class="btn btn-outline-primary">
+                    <i class="fas fa-tools"></i>
+                    Edit Skills
+                  </a>
+                  <a href="{% url 'experience.edit' template_data.owner.id %}" class="btn btn-outline-primary">
+                    <i class="fas fa-briefcase"></i>
+                    Edit Experience
+                  </a>
+                </div>
+              {% endif %}
+              <div class="mt-3">
+                <a href="{% url 'home.index' %}" class="btn btn-secondary w-100">
+                  <i class="fas fa-home"></i>
+                  Back to Home
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <!-- Work Experience Section -->
-        <div class="mb-4">
-          <h3 class="text-primary mb-3">Work Experience</h3>
-          <div style="max-width: 600px;">
-            {% if template_data.profile.experience_list.all %}
-              <div class="list-group">
-                {% for exp in template_data.profile.experience_list.all %}
-                  <div class="list-group-item mb-2 p-3 border rounded">
-                    <h5 class="mb-1">{{ exp.position }} at {{ exp.company }}</h5>
-                    <small class="text-muted">
+      <!-- Skills Section -->
+      <div class="section-header mt-4">
+        <i class="fas fa-tools"></i>
+        Skills & Expertise
+      </div>
+      <div class="section-content">
+        {% if template_data.profile.skill_list.all %}
+          <div class="row">
+            {% for skill in template_data.profile.skill_list.all %}
+              <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100">
+                  <div class="card-body text-center">
+                    <h6 class="card-title text-gt-navy">{{ skill.name }}</h6>
+                    <span class="badge bg-gt-gold">{{ skill.proficiency }}</span>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% elif template_data.profile.skills %}
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-0">{{ template_data.profile.skills }}</p>
+            </div>
+          </div>
+        {% else %}
+          <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle fa-2x mb-3 text-gt-gold"></i>
+            <h5>No skills added yet</h5>
+            <p>Skills help employers understand your capabilities and expertise.</p>
+            {% if request.user.id == template_data.profile.user.id %}
+              <a href="{% url 'skills.edit' template_data.profile.user.id %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Add Skills
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Education Section -->
+      <div class="section-header mt-4">
+        <i class="fas fa-graduation-cap"></i>
+        Education
+      </div>
+      <div class="section-content">
+        {% if template_data.profile.education %}
+          <div class="card">
+            <div class="card-body">
+              <p class="mb-0">{{ template_data.profile.education|linebreaks }}</p>
+            </div>
+          </div>
+        {% else %}
+          <div class="alert alert-info text-center">
+            <i class="fas fa-graduation-cap fa-2x mb-3 text-gt-gold"></i>
+            <h5>No education information added yet</h5>
+            <p>Share your educational background to help employers understand your qualifications.</p>
+            {% if request.user.id == template_data.profile.user.id %}
+              <a href="{% url 'profile.edit' template_data.profile.user.id %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i>
+                Add Education
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Work Experience Section -->
+      <div class="section-header mt-4">
+        <i class="fas fa-briefcase"></i>
+        Work Experience
+      </div>
+      <div class="section-content">
+        {% if template_data.profile.experience_list.all %}
+          <div class="row">
+            {% for exp in template_data.profile.experience_list.all %}
+              <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h5 class="card-title text-gt-navy">{{ exp.position }}</h5>
+                    <h6 class="card-subtitle mb-2 text-gt-gold">{{ exp.company }}</h6>
+                    <p class="text-muted small mb-3">
+                      <i class="fas fa-calendar text-gt-gold me-1"></i>
                       {{ exp.start_date|date:"M Y" }} -
                       {% if exp.is_current %}
                         Present
                       {% else %}
                         {{ exp.end_date|date:"M Y" }}
                       {% endif %}
-                    </small>
-                    <p class="mt-2">{{ exp.description }}</p>
+                    </p>
+                    <p class="card-text">{{ exp.description|linebreaks }}</p>
                   </div>
-                {% endfor %}
-                {% if request.user.id == template_data.profile.user.id %}
-                  <a href="{% url 'experience.edit' template_data.profile.user.id %}" class="btn btn-primary btn-sm d-inline-block mt-2">Edit Experience</a>
-                {% endif %}
-              </div>
-            {% else %}
-              <p class="text-muted">No work experience added yet.</p>
-              {% if request.user.id == template_data.profile.user.id %}
-                  <a href="{% url 'experience.edit' template_data.profile.user.id %}" class="btn btn-primary">Edit Experience</a>
-                {% endif %}
-            {% endif %}
-          </div>
-        </div>
-        
-
-        <!-- Portfolio & GitHub Links -->
-        {% if template_data.profile.portfolio or template_data.profile.github %}
-          <div class="mb-4">
-            <h3 class="text-primary mb-3">Links</h3>
-            <p>
-              {% if template_data.profile.portfolio %}
-                <a href="{{ template_data.profile.portfolio }}" target="_blank">Portfolio</a>
-                {% if template_data.profile.github %} | {% endif %}
-              {% endif %}
-              {% if template_data.profile.github %}
-                <a href="{{ template_data.profile.github }}" target="_blank">GitHub</a>
-              {% endif %}
-            </p>
-          </div>
-        {% endif %}
-
-        <!-- Application Status Section -->
-        {% if template_data.applications %}
-          <div class="mb-4">
-            <h3 class="text-primary mb-3">Job Applications</h3>
-            {% for application in template_data.applications %}
-              <div class="mb-2 p-2 border">
-                <strong>{{ application.job.name }}</strong> - {{ application.get_status_display }}
-                <br><small>Applied {{ application.applied_date|date:"M d, Y" }}</small>
+                </div>
               </div>
             {% endfor %}
           </div>
-        {% endif %}
-
-        <!-- Contact Information -->
-        {% if template_data.profile.show_email and template_data.profile.email %}
-          <div class="mb-4">
-            <h3 class="text-primary mb-3">Email</h3>
-            <p>
-              <a href="mailto:{{ template_data.profile.email }}">
-                {{ template_data.profile.email }}
+        {% else %}
+          <div class="alert alert-info text-center">
+            <i class="fas fa-briefcase fa-2x mb-3 text-gt-gold"></i>
+            <h5>No work experience added yet</h5>
+            <p>Share your professional experience to showcase your career journey.</p>
+            {% if request.user.id == template_data.profile.user.id %}
+              <a href="{% url 'experience.edit' template_data.profile.user.id %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Add Experience
               </a>
-            </p>
+            {% endif %}
           </div>
         {% endif %}
+      </div>
 
-        {% if template_data.profile.show_phone and template_data.profile.phone_number %}
-          <div class="mb-4">
-            <h3 class="text-primary mb-3">Phone</h3>
-            <p>
-              <a href="tel:{{ template_data.profile.phone_number }}">
-                {{ template_data.profile.phone_number }}
-              </a>
-            </p>
-          </div>
-        {% endif %}
-
-        <!-- Action Buttons -->
-        <div class="mt-4">
-          {% if template_data.owner.id == template_data.profile.user.id %}
-            <a href="{% url 'profile.edit' template_data.owner.id %}" class="btn btn-primary">
-              Edit Profile
-            </a>
-          {% endif %}
-          <a href="{% url 'home.index' %}" class="btn btn-secondary">
-            Back to Home
-          </a>
+      <!-- Portfolio & Links Section -->
+      {% if template_data.profile.portfolio or template_data.profile.github %}
+        <div class="section-header mt-4">
+          <i class="fas fa-link"></i>
+          Portfolio & Links
         </div>
+        <div class="section-content">
+          <div class="row">
+            {% if template_data.profile.portfolio %}
+              <div class="col-md-6 mb-3">
+                <div class="card">
+                  <div class="card-body text-center">
+                    <i class="fas fa-globe fa-2x text-gt-gold mb-3"></i>
+                    <h5 class="card-title">Portfolio</h5>
+                    <a href="{{ template_data.profile.portfolio }}" target="_blank" class="btn btn-outline-primary">
+                      <i class="fas fa-external-link-alt"></i>
+                      Visit Portfolio
+                    </a>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+            {% if template_data.profile.github %}
+              <div class="col-md-6 mb-3">
+                <div class="card">
+                  <div class="card-body text-center">
+                    <i class="fab fa-github fa-2x text-gt-gold mb-3"></i>
+                    <h5 class="card-title">GitHub</h5>
+                    <a href="{{ template_data.profile.github }}" target="_blank" class="btn btn-outline-primary">
+                      <i class="fas fa-external-link-alt"></i>
+                      View GitHub
+                    </a>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
 
+      <!-- Job Applications Section -->
+      {% if template_data.applications %}
+        <div class="section-header mt-4">
+          <i class="fas fa-file-alt"></i>
+          Job Applications
+        </div>
+        <div class="section-content">
+          <div class="row">
+            {% for application in template_data.applications %}
+              <div class="col-lg-6 mb-3">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title text-gt-navy">{{ application.job.name }}</h5>
+                    <span class="badge bg-info mb-2">{{ application.get_status_display }}</span>
+                    <p class="text-muted small mb-0">
+                      <i class="fas fa-calendar text-gt-gold me-1"></i>
+                      Applied {{ application.applied_date|date:"M d, Y" }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
   </div>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  
-  <style>
-    
-  </style>
 </body>
 </html>

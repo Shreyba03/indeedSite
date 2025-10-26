@@ -1,9 +1,8 @@
 <div class="container mt-4">
-    <h2>Create Job</h2>
-    <form method="POST">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="btn btn-primary mt-2">Create Job</button>
-    </form>
-  </div>
-  
+  <h2>Create Job</h2>
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary mt-2">Create Job</button>
+  </form>
+</div>

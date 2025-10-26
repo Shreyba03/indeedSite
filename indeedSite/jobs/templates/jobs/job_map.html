@@ -2,39 +2,543 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Job Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Map - IndeedLite</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <!-- Custom CSS -->
+  {% load static %}
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+  
   <style>
+    body {
+      font-family: var(--gt-font-primary);
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-primary);
+    }
+    
+    .map-controls {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      box-shadow: var(--gt-shadow-md);
+      margin-bottom: 1rem;
+      border-radius: 1rem;
+      border: 2px solid var(--gt-navy);
+    }
+    
+    .map-controls h2 {
+      margin-top: 0;
+      text-align: center;
+      color: var(--gt-navy);
+      font-weight: 700;
+    }
+    
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 1rem 0;
+      flex-wrap: wrap;
+    }
+    
+    .control-group label {
+      font-weight: 600;
+      min-width: 120px;
+      color: var(--gt-navy);
+    }
+    
+    #radiusSlider {
+      flex: 1;
+      min-width: 200px;
+      background: var(--gt-gold);
+    }
+    
+    #radiusValue {
+      font-weight: 600;
+      color: var(--gt-gold);
+      min-width: 80px;
+      background: var(--gt-navy);
+      color: var(--gt-white);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      text-align: center;
+    }
+    
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-secondary {
+      background-color: var(--gt-navy);
+      color: var(--gt-white);
+      margin-left: 0.5rem;
+    }
+    
+    .btn-secondary:hover {
+      background-color: var(--gt-navy-dark);
+      color: var(--gt-white);
+      transform: translateY(-2px);
+    }
+    
+    .btn-warning {
+      background-color: var(--gt-warning);
+      color: var(--gt-gray-dark);
+      margin-left: 0.5rem;
+    }
+    
+    .btn-warning:hover {
+      background-color: #e0a800;
+      color: var(--gt-gray-dark);
+      transform: translateY(-2px);
+    }
+    
+    .btn-success {
+      background-color: var(--gt-success);
+      color: var(--gt-white);
+      margin-left: 0.5rem;
+    }
+    
+    .btn-success:hover {
+      background-color: #218838;
+      color: var(--gt-white);
+      transform: translateY(-2px);
+    }
+    
+    .btn-success.active {
+      background-color: #1e7e34;
+      box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
+      transform: translateY(0);
+    }
+    
     #map {
-      height: 600px;
+      height: 70vh;
       width: 100%;
+      cursor: default;
+      border-radius: 1rem;
+      border: 2px solid var(--gt-navy);
+      box-shadow: var(--gt-shadow-lg);
+    }
+    
+    #map.pin-mode {
+      cursor: crosshair;
+    }
+    
+    .job-count {
+      text-align: center;
+      padding: 1rem;
+      font-weight: 600;
+      background-color: var(--gt-navy);
+      color: var(--gt-white);
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .pin-location-marker {
+      background-color: var(--gt-danger);
+      border: 3px solid var(--gt-white);
+      border-radius: 50% 50% 50% 0;
+      width: 20px;
+      height: 20px;
+      transform: rotate(-45deg);
+      box-shadow: var(--gt-shadow-md);
+    }
+    
+    .map-info {
+      background: var(--card-bg);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      border: 2px solid var(--gt-gold);
+    }
+    
+    .map-info h5 {
+      color: var(--gt-navy);
+      margin-bottom: 0.5rem;
+    }
+    
+    .map-info p {
+      color: var(--text-secondary);
+      margin-bottom: 0;
+    }
+    
+    /* Leaflet popup styling */
+    .leaflet-popup-content-wrapper {
+      border-radius: 0.5rem;
+      box-shadow: var(--gt-shadow-lg);
+    }
+    
+    .leaflet-popup-content {
+      margin: 0;
+      padding: 1rem;
+    }
+    
+    .leaflet-popup-content .btn {
+      transition: all 0.3s ease;
+    }
+    
+    .leaflet-popup-content .btn:hover {
+      background-color: var(--gt-navy-dark) !important;
+      transform: translateY(-1px);
+      box-shadow: var(--gt-shadow-md);
+    }
+    
+    @media (max-width: 768px) {
+      .control-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+      }
+      
+      .control-group label {
+        min-width: auto;
+        text-align: center;
+      }
+      
+      #map {
+        height: 60vh;
+      }
+      
+      .btn {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
+        margin-bottom: 0.5rem;
+      }
     }
   </style>
 </head>
 <body>
-  <h2 style="text-align: center; margin-top: 20px;">Job Locations</h2>
-  <div id="map"></div>
-  <a class="btn btn-secondary" href="{%url 'home.index'%}">Home</a>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'home.index' %}">
+        <i class="fas fa-briefcase"></i>
+        IndeedLite
+      </a>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'job_list' %}">
+              <i class="fas fa-briefcase"></i>
+              Jobs
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="{% url 'job_map_page' %}">
+              <i class="fas fa-map-marker-alt"></i>
+              Job Map
+            </a>
+          </li>
+          {% if user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'profile.index' request.user.id %}">
+                <i class="fas fa-user"></i>
+                Profile
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.logout' %}">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+              </a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.login' %}">
+                <i class="fas fa-sign-in-alt"></i>
+                Login
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.signup' %}">
+                <i class="fas fa-user-plus"></i>
+                Sign Up
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
 
+  <!-- Main Content -->
+  <div class="container mt-4">
+    <!-- Map Controls -->
+    <div class="map-controls">
+      <h2>
+        <i class="fas fa-map-marked-alt me-2"></i>
+        Job Locations Map
+      </h2>
+      
+      <!-- Map Info -->
+      <div class="map-info">
+        <h5><i class="fas fa-info-circle me-2"></i>How to Use the Map</h5>
+        <p>Click "Pin a Location" to set your location, then use the distance slider to filter jobs within your desired radius. Drag the pin to adjust your location.</p>
+      </div>
+      
+      <div class="control-group">
+        <button id="pinLocationBtn" class="btn btn-success">
+          <i class="fas fa-map-pin"></i>
+          Pin a Location
+        </button>
+        <button id="clearFilterBtn" class="btn btn-warning" style="display:none;">
+          <i class="fas fa-times"></i>
+          Clear Filter
+        </button>
+        <a class="btn btn-secondary" href="{% url 'home.index' %}">
+          <i class="fas fa-home"></i>
+          Home
+        </a>
+      </div>
+      
+      <div class="control-group" id="radiusControl" style="display:none;">
+        <label for="radiusSlider">
+          <i class="fas fa-ruler me-2"></i>Distance Filter:
+        </label>
+        <input type="range" id="radiusSlider" min="10" max="500" value="50" step="10" class="form-range">
+        <span id="radiusValue">50 miles</span>
+      </div>
+    </div>
+    
+    <!-- Job Count Display -->
+    <div class="job-count" id="jobCount">
+      <i class="fas fa-briefcase me-2"></i>
+      Loading job locations...
+    </div>
+    
+    <!-- Map Container -->
+    <div id="map"></div>
+  </div>
+
+  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
   <script>
-    var map = L.map('map').setView([39.8283, -98.5795], 4);
+    // Initialize map centered on US
+    const map = L.map('map').setView([39.8283, -98.5795], 4);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    fetch("{% url 'job_map_data' %}")
-      .then(response => response.json())
-      .then(data => {
-        data.forEach(job => {
-          if (job.latitude && job.longitude) {
-            L.marker([job.latitude, job.longitude])
-             .addTo(map)
-             .bindPopup(`<b>${job.title}</b><br>${job.company}<br>${job.location}`);
-          }
+    // Store user location and markers
+    let userLocation = null;
+    let userMarker = null;
+    let radiusCircle = null;
+    let jobMarkers = [];
+    let pinModeActive = false;
+
+    // UI elements
+    const pinLocationBtn = document.getElementById('pinLocationBtn');
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    const radiusControl = document.getElementById('radiusControl');
+    const radiusSlider = document.getElementById('radiusSlider');
+    const radiusValue = document.getElementById('radiusValue');
+    const jobCount = document.getElementById('jobCount');
+
+    // Update radius value display
+    radiusSlider.addEventListener('input', (e) => {
+      radiusValue.textContent = `${e.target.value} miles`;
+      if (userLocation) {
+        loadJobs(userLocation.lat, userLocation.lng, e.target.value);
+        updateRadiusCircle(e.target.value);
+      }
+    });
+
+    // Pin location mode
+    pinLocationBtn.addEventListener('click', () => {
+      if (pinModeActive) {
+        deactivatePinMode();
+      } else {
+        activatePinMode();
+      }
+    });
+
+    function activatePinMode() {
+      pinModeActive = true;
+      pinLocationBtn.classList.add('active');
+      pinLocationBtn.innerHTML = '<i class="fas fa-crosshairs me-2"></i>Click on Map';
+      map.getContainer().classList.add('pin-mode');
+    }
+
+    function deactivatePinMode() {
+      pinModeActive = false;
+      pinLocationBtn.classList.remove('active');
+      pinLocationBtn.innerHTML = '<i class="fas fa-map-pin me-2"></i>Pin a Location';
+      map.getContainer().classList.remove('pin-mode');
+    }
+
+    // Handle map clicks for pinning location
+    map.on('click', (e) => {
+      if (pinModeActive) {
+        setUserLocation(e.latlng.lat, e.latlng.lng);
+        deactivatePinMode();
+      }
+    });
+
+    // Set user location
+    function setUserLocation(lat, lng) {
+      userLocation = { lat, lng };
+      
+      // Show controls
+      radiusControl.style.display = 'flex';
+      clearFilterBtn.style.display = 'inline-block';
+
+      // Remove existing user marker
+      if (userMarker) {
+        map.removeLayer(userMarker);
+      }
+      
+      // Create pin marker
+      const icon = L.divIcon({
+        className: 'pin-location-marker',
+        iconSize: [20, 20],
+        iconAnchor: [10, 20]
+      });
+      
+      userMarker = L.marker([lat, lng], { icon: icon })
+        .addTo(map)
+        .bindPopup('<b><i class="fas fa-map-pin"></i> Your Location</b><br><small>Drag to move</small>')
+        .openPopup();
+
+      // Make marker draggable
+      userMarker.dragging.enable();
+      userMarker.on('dragend', (e) => {
+        const newPos = e.target.getLatLng();
+        userLocation = { lat: newPos.lat, lng: newPos.lng };
+        loadJobs(userLocation.lat, userLocation.lng, radiusSlider.value);
+        updateRadiusCircle(radiusSlider.value);
+      });
+
+      // Center map on user location
+      map.setView([lat, lng], 8);
+
+      // Add radius circle
+      updateRadiusCircle(radiusSlider.value);
+
+      // Load filtered jobs
+      loadJobs(lat, lng, radiusSlider.value);
+    }
+
+    // Clear filter button
+    clearFilterBtn.addEventListener('click', () => {
+      userLocation = null;
+      if (userMarker) {
+        map.removeLayer(userMarker);
+        userMarker = null;
+      }
+      if (radiusCircle) {
+        map.removeLayer(radiusCircle);
+        radiusCircle = null;
+      }
+      if (pinModeActive) {
+        deactivatePinMode();
+      }
+      radiusControl.style.display = 'none';
+      clearFilterBtn.style.display = 'none';
+      
+      // Reset map view
+      map.setView([39.8283, -98.5795], 4);
+      
+      // Load all jobs
+      loadJobs();
+    });
+
+    // Update radius circle on map
+    function updateRadiusCircle(radiusMiles) {
+      if (radiusCircle) {
+        map.removeLayer(radiusCircle);
+      }
+      
+      if (userLocation) {
+        // Convert miles to meters (1 mile = 1609.34 meters)
+        const radiusMeters = radiusMiles * 1609.34;
+        radiusCircle = L.circle([userLocation.lat, userLocation.lng], {
+          radius: radiusMeters,
+          color: '#B3A369',
+          fillColor: '#B3A369',
+          fillOpacity: 0.1,
+          weight: 3
+        }).addTo(map);
+      }
+    }
+
+    // Load jobs from server
+    function loadJobs(lat = null, lng = null, radius = null) {
+      // Clear existing job markers
+      jobMarkers.forEach(marker => map.removeLayer(marker));
+      jobMarkers = [];
+
+      // Build URL with query parameters
+      let url = "{% url 'job_map_data' %}";
+      if (lat && lng && radius) {
+        url += `?lat=${lat}&lng=${lng}&radius=${radius}`;
+      }
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          jobCount.innerHTML = `<i class="fas fa-briefcase me-2"></i>Showing ${data.length} job${data.length !== 1 ? 's' : ''}`;
+          
+          data.forEach(job => {
+            if (job.latitude && job.longitude) {
+              const popupContent = `
+                <div style="min-width: 280px;">
+                  <div style="border-bottom: 2px solid #B3A369; padding-bottom: 0.5rem; margin-bottom: 0.75rem;">
+                    <h6 style="color: #003057; margin-bottom: 0.25rem; font-weight: 600;"><i class="fas fa-briefcase me-1"></i>${job.title}</h6>
+                    <p style="color: #B3A369; margin-bottom: 0; font-weight: 500;"><i class="fas fa-building me-1"></i>${job.company}</p>
+                  </div>
+                  <div style="margin-bottom: 0.75rem;">
+                    <p style="color: #6C757D; margin-bottom: 0.25rem;"><i class="fas fa-map-marker-alt me-1"></i>${job.location}</p>
+                    ${job.salary ? `<p style="color: #28A745; margin-bottom: 0.25rem;"><i class="fas fa-dollar-sign me-1"></i>${job.salary}</p>` : ''}
+                    ${job.distance ? `<p style="color: #17A2B8; margin-bottom: 0;"><i class="fas fa-route me-1"></i>Distance: ${job.distance} miles</p>` : ''}
+                  </div>
+                  <div style="text-align: center;">
+                    <a href="/jobs/${job.id}/" class="btn btn-primary btn-sm" style="background-color: #003057; border-color: #003057; color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; display: inline-flex; align-items: center; gap: 0.375rem;">
+                      <i class="fas fa-eye"></i>View Full Details
+                    </a>
+                  </div>
+                </div>
+              `;
+              
+              const marker = L.marker([job.latitude, job.longitude])
+                .addTo(map)
+                .bindPopup(popupContent);
+              
+              jobMarkers.push(marker);
+            }
+          });
+        })
+        .catch(error => {
+          console.error('Error loading jobs:', error);
+          jobCount.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Error loading jobs';
         });
-      })
+    }
+
+    // Initial load of all jobs
+    loadJobs();
   </script>
 </body>
 </html>
