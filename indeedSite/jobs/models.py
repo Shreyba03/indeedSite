@@ -89,7 +89,7 @@ class Job(models.Model):
 class Application(models.Model):
     STATUS_CHOICES = [
         ("applied", "Applied"),
-        ("under_review", "Under Review"),
+        ("under-review", "Under Review"),
         ("interview", "Interview"),
         ("rejected", "Rejected"),
         ("accepted", "Accepted"),

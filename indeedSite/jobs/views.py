@@ -29,17 +29,17 @@ def show(request, id):
     
     return render(request, 'jobs/show.html', {'template_data': template_data})
 
-@login_required
-def apply_to_job(request, job_id):
-    job = get_object_or_404(Job, id=job_id)
+# @login_required
+# def apply_to_job(request, job_id):
+#     job = get_object_or_404(Job, id=job_id)
     
-    application, created = Application.objects.get_or_create(
-        user=request.user,
-        job=job,
-        defaults={'status': 'applied'}
-    )
+#     application, created = Application.objects.get_or_create(
+#         user=request.user,
+#         job=job,
+#         defaults={'status': 'applied'}
+#     )
     
-    return redirect('jobs.show', id=job_id)
+#     return redirect('jobs.show', id=job_id)
 
 def profile(request, user_id):
     user = get_object_or_404(User, id=user_id)
@@ -50,7 +50,8 @@ def profile(request, user_id):
     template_data = {}
     template_data['profile'] = profile
     template_data['owner'] = user
-    template_data['applications'] = applications
+    if user == request.user:
+        template_data['applications'] = applications
     template_data['skills_list'] = profile.skill_list.all()
     template_data['experience_list'] = profile.experience_list.all()
     
@@ -248,6 +249,32 @@ def create_job(request):
 
     return render(request, 'jobs/create_job.html', {'form': form})
 
+def edit_job(request, job_id):
+    if not request.user.is_authenticated:
+        return redirect('accounts.login')
+
+    profile = Profile.objects.get(user=request.user)
+    if not profile.is_recruiter:
+        return redirect('home.index')  # block non-recruiters
+
+    # Get the job, only allow if it belongs to the user's company
+    job = get_object_or_404(Job, id=job_id, company=profile.company)
+
+    if request.method == 'POST':
+        form = JobForm(request.POST, instance=job)
+        if form.is_valid():
+            job = form.save(commit=False)
+            # Optionally update lat/lon if location changed
+            lat, lon = get_lat_long(job.location)
+            job.latitude = lat
+            job.longitude = lon
+            job.save()
+            return redirect('job_detail', job.id)
+    else:
+        form = JobForm(instance=job)
+
+    return render(request, 'jobs/edit_job.html', {'form': form, 'job': job})
+
 def user_list(request):
     search_term = request.GET.get('search', '')
 
@@ -346,7 +373,9 @@ def recruiter_pipeline(request):
     if hasattr(request.user, 'profile') and request.user.profile.is_recruiter:
         company = request.user.profile.company
         jobs = Job.objects.filter(company=company)
+        print(jobs)
         applications = Application.objects.filter(job__in=jobs)
+        print(applications)
     else:
         applications = Application.objects.all()
 
@@ -354,6 +383,10 @@ def recruiter_pipeline(request):
     status_groups = {}
     for code, label in Application.STATUS_CHOICES:
         status_groups[label] = applications.filter(status=code)
+
+    print(status_groups)
+    print(Application.objects.values_list('status', flat=True).distinct())
+
 
     return render(request, 'jobs/recruiter_pipeline.html', {
         'status_groups': status_groups
@@ -370,28 +403,3 @@ def update_application_status(request, app_id):
         app.save()
         return JsonResponse({"success": True})
     return JsonResponse({"success": False}, status=400)
-
-##################################################
-# ADMIN VIEWS
-##################################################
-
-@user_passes_test(lambda u: u.is_staff)
-def export_applications_csv(request):
-    """Admin-only CSV export."""
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="applications.csv"'
-
-    writer = csv.writer(response)
-    writer.writerow(['Username', 'Job Title', 'Company', 'Status', 'Applied At', 'Note'])
-
-    for app in Application.objects.select_related('user', 'job'):
-        writer.writerow([
-            app.user.username,
-            app.job.title,
-            app.job.company,
-            app.get_status_display(),
-            app.applied_at.strftime("%Y-%m-%d"),
-            app.note
-        ])
-
-    return response

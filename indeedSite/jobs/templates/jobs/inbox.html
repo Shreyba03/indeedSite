@@ -1,5 +1,117 @@
-<div class="messaging-container" style="display: flex;">
-    <div class="sidebar" style="width: 25%; border-right: 1px solid #ddd; padding: 10px;">
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IndeedLite - Find Your Next Career Opportunity</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  {% load static %}
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'home.index' %}">
+        <i class="fas fa-briefcase"></i>
+        IndeedLite
+      </a>
+  
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+  
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+  
+          {% if user.is_authenticated %}
+            {% if user.profile.is_recruiter %}
+              <!-- Links for recruiters -->
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'recruiter_pipeline' %}">
+                  <i class="fas fa-columns"></i>
+                  Kanban
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'job.create' %}">
+                  <i class="fas fa-plus"></i>
+                  Create Job
+                </a>
+              </li>
+              
+            {% else %}
+              <!-- Links for normal users -->
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'job_list' %}">
+                  <i class="fas fa-briefcase"></i>
+                  Jobs
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'recommended_jobs' %}">
+                  <i class="fas fa-star"></i>
+                  Recommended
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'job_map_page' %}">
+                  <i class="fas fa-map-marker-alt"></i>
+                  Job Map
+                </a>
+              </li>
+            {% endif %}
+  
+            <!-- Links common to both recruiters and normal users -->
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'job_inbox' 'patlol' %}">
+                <i class="fas fa-envelope"></i>
+                Inbox
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'profile.index' request.user.id %}">
+                <i class="fas fa-user"></i>
+                Profile
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.logout' %}">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+              </a>
+            </li>
+          {% else %}
+            <!-- Links for non-authenticated users -->
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.login' %}">
+                <i class="fas fa-sign-in-alt"></i>
+                Login
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.signup' %}">
+                <i class="fas fa-user-plus"></i>
+                Sign Up
+              </a>
+            </li>
+          {% endif %}
+  
+        </ul>
+      </div>
+    </div>
+  </nav>
+  </nav>
+
+<div class="messaging-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
         <h3>Users</h3>
         <ul>
             {% for user in users %}
@@ -8,24 +120,164 @@
         </ul>
     </div>
 
-    <div class="chat-area" style="flex-grow: 1; padding: 10px;">
+    <!-- Chat Area -->
+    <div class="chat-area">
         {% if selected_user %}
             <h3>Chat with {{ selected_user.username }}</h3>
             <div class="messages">
                 {% for msg in messages %}
-                    <p><strong>{{ msg.sender.username }}:</strong> {{ msg.content }}</p>
-                    {% if msg.sender.username == user.username %}
-                        <a href="{% url 'job_delete_msg' selected_user.username msg.id %}">Delete</a>
-                    {% endif %}
+                    <div class="message {% if msg.sender.username == user.username %}sent{% else %}received{% endif %}">
+                        <strong>{{ msg.sender.username }}:</strong> {{ msg.content }}
+                        {% if msg.sender.username == user.username %}
+                            <a class="delete-msg" href="{% url 'job_delete_msg' selected_user.username msg.id %}">Delete</a>
+                        {% endif %}
+                    </div>
                 {% endfor %}
             </div>
-            <form method="POST">
+            <form method="POST" class="message-form">
                 {% csrf_token %}
-                <textarea name="message" rows="2" style="width: 100%;"></textarea>
-                <button type="submit">Send</button>
+                <textarea name="message" placeholder="Type your message..."></textarea>
+                <button type="submit"><i class="fas fa-paper-plane"></i> Send</button>
             </form>
         {% else %}
-            <p>Select a user to start chatting.</p>
+            <p class="no-chat">Select a user to start chatting.</p>
         {% endif %}
     </div>
 </div>
+
+<style>
+/* Container */
+.messaging-container {
+    display: flex;
+    height: 75vh;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* Sidebar */
+.sidebar {
+    width: 25%;
+    background-color: #f9f9f9;
+    border-right: 1px solid #ddd;
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.sidebar h3 {
+    color: #003366;
+    margin-bottom: 1rem;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    margin-bottom: 10px;
+}
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: #003366;
+    font-weight: 500;
+    display: block;
+    padding: 5px 8px;
+    border-radius: 5px;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar ul li a:hover {
+    background-color: #e6f0ff;
+}
+
+/* Chat Area */
+.chat-area {
+    flex-grow: 1;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-area h3 {
+    margin-bottom: 1rem;
+    color: #003366;
+}
+
+.messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+    margin-bottom: 10px;
+}
+
+.message {
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    border-radius: 10px;
+    max-width: 70%;
+    position: relative;
+}
+
+.message.sent {
+    background-color: #cce5ff;
+    align-self: flex-end;
+    text-align: right;
+}
+
+.message.received {
+    background-color: #f1f1f1;
+    align-self: flex-start;
+}
+
+.delete-msg {
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 0.8rem;
+    color: #888;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.delete-msg:hover {
+    color: #ff4d4f;
+}
+
+/* Message Form */
+.message-form {
+    display: flex;
+    gap: 10px;
+}
+
+.message-form textarea {
+    flex-grow: 1;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    resize: none;
+    font-size: 0.95rem;
+}
+
+.message-form button {
+    background-color: #003366;
+    color: white;
+    border: none;
+    padding: 0 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.message-form button:hover {
+    background-color: #0055a5;
+}
+
+.no-chat {
+    color: #888;
+    text-align: center;
+    margin-top: 2rem;
+    font-style: italic;
+}
+</style>

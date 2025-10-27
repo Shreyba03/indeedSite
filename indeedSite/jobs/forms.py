@@ -21,24 +21,18 @@ class ExperienceForm(forms.ModelForm):
 class JobForm(forms.ModelForm):
     class Meta:
         model = Job
-        fields = [
-            'title',
-            'company',
-            'description',
-            'location',
-            'remote',
-            'remote_friendly',
-            'visa_sponsorship',
-            'salary_min',
-            'salary_max',
-            'skills_required',
-        ]
+        fields = '__all__'
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
-            'skills_required': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'company': forms.TextInput(attrs={'class': 'form-control'}),
-            'location': forms.TextInput(attrs={'class': 'form-control'}),
+            'title': forms.TextInput(attrs={'class':'form-control'}),
+            'company': forms.TextInput(attrs={'class':'form-control'}),
+            'location': forms.TextInput(attrs={'class':'form-control'}),
+            'salary_min': forms.NumberInput(attrs={'class':'form-control'}),
+            'salary_max': forms.NumberInput(attrs={'class':'form-control'}),
+            'skills_required': forms.TextInput(attrs={'class':'form-control'}),
+            'description': forms.Textarea(attrs={'class':'form-control', 'rows':6}),
+            'remote': forms.CheckboxInput(attrs={'class':'form-check-input'}),
+            'visa_sponsorship': forms.CheckboxInput(attrs={'class':'form-check-input'}),
         }
+
 
         
