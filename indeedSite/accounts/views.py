@@ -1,0 +1,56 @@
+from django.shortcuts import render
+from django.contrib.auth.forms import UserCreationForm
+from django.shortcuts import redirect
+from .forms import CustomUserCreationForm, CustomErrorList
+from django.contrib.auth import login as auth_login, authenticate, logout as auth_logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from jobs.models import Profile
+
+def signup(request):
+    template_data = {'title': 'Sign Up'}
+
+    if request.method == 'GET':
+        template_data['form'] = CustomUserCreationForm()
+        return render(request, 'accounts/signup.html', {'template_data': template_data})
+
+    elif request.method == 'POST':
+        form = CustomUserCreationForm(request.POST, error_class=CustomErrorList)
+        if form.is_valid():
+            user = form.save()
+
+            # ✅ Only create if not already existing
+            profile, created = Profile.objects.get_or_create(user=user)
+            profile.is_recruiter = form.cleaned_data.get('is_recruiter', False)
+            profile.company = form.cleaned_data.get('company', "")
+            profile.save()
+
+            return redirect('home.index')
+        else:
+            template_data['form'] = form
+            return render(request, 'accounts/signup.html', {'template_data': template_data})
+        
+def login(request):
+    template_data = {}
+    template_data['title'] = 'Login'
+    if request.method == 'GET':
+        return render(request, 'accounts/login.html',
+            {'template_data': template_data})
+    elif request.method == 'POST':
+        user = authenticate(
+            request,
+            username = request.POST['username'],
+            password = request.POST['password']
+        )
+        if user is None:
+            template_data['error'] = 'The username or password is incorrect.'
+            return render(request, 'accounts/login.html',
+                {'template_data': template_data})
+        else:
+            auth_login(request, user)
+            return redirect('home.index')
+        
+@login_required
+def logout(request):
+    auth_logout(request)
+    return redirect('home.index')
