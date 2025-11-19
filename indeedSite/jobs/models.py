@@ -112,3 +112,14 @@ class Message(models.Model):
 
     class Meta:
         ordering = ['timestamp']
+
+class Search(models.Model):
+    recruiter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_searches')
+    name = models.CharField(max_length=255)
+    search_term = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_run = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.recruiter.username} - {self.name}"
+

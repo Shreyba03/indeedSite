@@ -1,0 +1,11 @@
+<div class="container mt-4">
+    <h2>Email {{ candidate.user.username }}</h2>
+    <hr>
+  
+    <form method="POST">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button class="btn btn-primary mt-2">Send Email</button>
+    </form>
+  </div>
+  

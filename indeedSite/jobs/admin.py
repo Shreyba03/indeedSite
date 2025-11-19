@@ -1,6 +1,6 @@
 import csv
 from django.contrib import admin
-from .models import Job, Profile, Skill, Experience, Application, Message
+from .models import Job, Profile, Skill, Experience, Application, Message, Search
 from django.http import HttpResponse
 
 # Register your models here.
@@ -36,3 +36,5 @@ class ApplicationAdmin(admin.ModelAdmin):
     list_filter = ("status", "applied_at")
     search_fields = ("job__title", "user__username")
     actions = [export_as_csv]
+
+admin.site.register(Search)

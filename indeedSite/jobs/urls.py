@@ -21,4 +21,7 @@ urlpatterns = [
     path("<int:id>/recommended-users/", views.recommended_users, name="recommended_users"), # Recommends users to recruiters
     path('kanaban/', views.recruiter_pipeline, name='recruiter_pipeline'),
     path('kanaban/update/<int:app_id>/', views.update_application_status, name='update_application_status'),
+    path('contact/<int:user_id>/', views.send_email, name='send_email'),
+    path('notifications/', views.notifications, name="notificiations")
+
 ]

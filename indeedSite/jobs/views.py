@@ -1,13 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
-from .models import Job, Profile, Application, Skill, Experience, Message
+from .models import Job, Profile, Application, Skill, Experience, Message, Search
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .forms import ProfileForm, JobForm
+from .forms import ProfileForm, JobForm, ContactCandidateForm
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
 import requests
 import csv
 from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
 
 def index(request):
     jobs = Job.objects.all()
@@ -145,9 +147,9 @@ def job_list(request):
         jobs = jobs.filter(skills_required__icontains=skills)
     if location:
         jobs = jobs.filter(location__icontains=location)
-    if remote:  # e.g., ?remote=1
+    if remote:
         jobs = jobs.filter(remote=True)
-    if visa:  # e.g., ?visa=1
+    if visa:
         jobs = jobs.filter(visa_sponsorship=True)
     if salary_min:
         jobs = jobs.filter(salary_min__gte=salary_min)
@@ -281,6 +283,13 @@ def user_list(request):
     profiles = Profile.objects.select_related('user').prefetch_related('skill_list', 'project_list')
 
     if search_term:
+        if request.user.is_authenticated:
+            Search.objects.get_or_create(
+                recruiter=request.user,
+                search_term=search_term,
+                defaults={'name': f"Search: {search_term}"}
+            )
+
         profiles = profiles.filter(
             Q(user__username__icontains=search_term) |
             Q(headline__icontains=search_term) |
@@ -395,7 +404,6 @@ def recruiter_pipeline(request):
 
 @login_required
 def update_application_status(request, app_id):
-    """Handle AJAX drag-and-drop updates."""
     if request.method == "POST":
         new_status = request.POST.get("status")
         app = get_object_or_404(Application, id=app_id)
@@ -403,3 +411,65 @@ def update_application_status(request, app_id):
         app.save()
         return JsonResponse({"success": True})
     return JsonResponse({"success": False}, status=400)
+
+@login_required
+def send_email(request, user_id):
+    recruiter_profile = Profile.objects.get(user=request.user)
+
+    if not recruiter_profile.is_recruiter:
+        return redirect('home.index')
+
+    candidate_profile = get_object_or_404(Profile, user__id=user_id)
+    print(candidate_profile.email)
+
+    if request.method == 'POST':
+        form = ContactCandidateForm(request.POST)
+        if form.is_valid():
+            subject = form.cleaned_data['subject']
+            message = form.cleaned_data['message']
+
+            from_email = settings.DEFAULT_FROM_EMAIL  
+
+            full_message = f"""
+Message from recruiter: {recruiter_profile.email}
+
+{message}
+            """
+
+            send_mail(
+                subject,
+                full_message,
+                from_email,  
+                [candidate_profile.email],
+                fail_silently=False,
+            )
+
+            return redirect('profile.index', user_id=user_id)
+
+    else:
+        form = ContactCandidateForm()
+
+    return render(request, 'jobs/send_email.html', {
+        'form': form,
+        'candidate': candidate_profile
+    })
+
+def notifications(request):
+    recruiter = request.user
+    searches = recruiter.saved_searches.order_by('-created_at')[:3]  # last 10 searches
+    notifications = {}
+
+    for search in searches:
+        profiles = Profile.objects.select_related('user').prefetch_related('skill_list', 'project_list')
+
+        if search.search_term:
+            profiles = profiles.filter(
+                Q(user__username__icontains=search.search_term) |
+                Q(headline__icontains=search.search_term) |
+                Q(skill_list__name__icontains=search.search_term)
+            ).distinct()
+
+        if profiles.exists():
+            notifications[search] = profiles
+
+    return render(request, 'jobs/notifications.html', {'notifications': notifications})

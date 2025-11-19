@@ -1,0 +1,18 @@
+<h1>Candidate Matches</h1>
+
+{% if notifications %}
+    {% for search, candidates in notifications.items %}
+        <h2>{{ search.name }} ({{ candidates.count }})</h2>
+        <ul>
+            {% for candidate in candidates %}
+                <li>
+                    <a href="{% url 'profile.index' user_id=candidate.user.id %}">
+                        {{ candidate.user.get_full_name }} - {{ candidate.headline }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+{% else %}
+    <p>No candidates found for your searches.</p>
+{% endif %}

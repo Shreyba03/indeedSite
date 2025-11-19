@@ -35,4 +35,6 @@ class JobForm(forms.ModelForm):
         }
 
 
-        
+class ContactCandidateForm(forms.Form):
+    subject = forms.CharField(max_length=120)
+    message = forms.CharField(widget=forms.Textarea)
