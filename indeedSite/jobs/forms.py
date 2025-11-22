@@ -4,7 +4,11 @@ from .models import Profile, Skill, Experience, Job
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['headline', 'education', 'email', 'portfolio', 'github', "phone_number", "show_email", "show_phone"]
+        fields = ['headline', 'education', 'location', 'latitude', 'longitude', 'email', 'portfolio', 'github', "phone_number", "show_email", "show_phone"]
+        widgets = {
+            'latitude': forms.HiddenInput(attrs={'id': 'id_profile_latitude'}),
+            'longitude': forms.HiddenInput(attrs={'id': 'id_profile_longitude'}),
+        }
         
 
 class SkillForm(forms.ModelForm):
@@ -32,6 +36,8 @@ class JobForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'class':'form-control', 'rows':6}),
             'remote': forms.CheckboxInput(attrs={'class':'form-check-input'}),
             'visa_sponsorship': forms.CheckboxInput(attrs={'class':'form-check-input'}),
+            'latitude': forms.HiddenInput(attrs={'id': 'id_latitude'}),
+            'longitude': forms.HiddenInput(attrs={'id': 'id_longitude'}),
         }
 
 

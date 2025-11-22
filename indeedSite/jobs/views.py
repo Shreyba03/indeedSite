@@ -241,9 +241,11 @@ def create_job(request):
         form = JobForm(request.POST)
         if form.is_valid():
             job = form.save(commit=False)
-            lat, lon = get_lat_long(job.location)
-            job.latitude = lat
-            job.longitude = lon
+            # If latitude and longitude are not provided via the map, geocode the location
+            if not job.latitude or not job.longitude:
+                lat, lon = get_lat_long(job.location)
+                job.latitude = lat
+                job.longitude = lon
             job.save()
             return redirect('job_list')
     else:
@@ -266,10 +268,11 @@ def edit_job(request, job_id):
         form = JobForm(request.POST, instance=job)
         if form.is_valid():
             job = form.save(commit=False)
-            # Optionally update lat/lon if location changed
-            lat, lon = get_lat_long(job.location)
-            job.latitude = lat
-            job.longitude = lon
+            # If latitude and longitude are not provided via the map, geocode the location
+            if not job.latitude or not job.longitude:
+                lat, lon = get_lat_long(job.location)
+                job.latitude = lat
+                job.longitude = lon
             job.save()
             return redirect('job_detail', job.id)
     else:
@@ -473,3 +476,49 @@ def notifications(request):
             notifications[search] = profiles
 
     return render(request, 'jobs/notifications.html', {'notifications': notifications})
+
+@login_required
+def applicant_map(request, job_id):
+    """Show a map with applicant locations clustered by geographic area."""
+    job = get_object_or_404(Job, id=job_id)
+    
+    # Check if user is a recruiter and has access to this job
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_recruiter:
+        return redirect('home.index')
+    
+    if job.company != request.user.profile.company:
+        return redirect('home.index')
+    
+    return render(request, 'jobs/applicant_map.html', {'job': job})
+
+@login_required
+def applicant_map_data(request, job_id):
+    """Return JSON data for applicant locations."""
+    job = get_object_or_404(Job, id=job_id)
+    
+    # Check if user is a recruiter and has access to this job
+    if not hasattr(request.user, 'profile') or not request.user.profile.is_recruiter:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    if job.company != request.user.profile.company:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    # Get all applications for this job
+    applications = Application.objects.filter(job=job).select_related('user__profile')
+    
+    applicant_data = []
+    for app in applications:
+        profile = app.user.profile
+        if profile.latitude and profile.longitude:
+            applicant_data.append({
+                'id': app.user.id,
+                'username': app.user.username,
+                'latitude': profile.latitude,
+                'longitude': profile.longitude,
+                'headline': profile.headline or 'No headline',
+                'location': profile.location or 'Location not specified',
+                'status': app.get_status_display(),
+                'applied_at': app.applied_at.strftime('%Y-%m-%d')
+            })
+    
+    return JsonResponse(applicant_data, safe=False)

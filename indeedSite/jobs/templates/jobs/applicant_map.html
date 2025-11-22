@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Applicant Locations - {{ job.title }} - IndeedLite</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <!-- Leaflet MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <!-- Custom CSS -->
+  {% load static %}
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: var(--gt-font-primary);
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-primary);
+    }
+    
+    .map-controls {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      box-shadow: var(--gt-shadow-md);
+      margin-bottom: 1rem;
+      border-radius: 1rem;
+      border: 2px solid var(--gt-navy);
+    }
+    
+    .map-controls h2 {
+      margin-top: 0;
+      text-align: center;
+      color: var(--gt-navy);
+      font-weight: 700;
+    }
+
+    .job-info {
+      background: linear-gradient(135deg, #003057 0%, #00457C 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--gt-shadow-md);
+    }
+
+    .job-info h5 {
+      margin: 0 0 0.5rem 0;
+      font-weight: 600;
+    }
+
+    .job-info p {
+      margin: 0.25rem 0;
+      opacity: 0.9;
+    }
+    
+    .stats-container {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      flex: 1;
+      min-width: 200px;
+      background: white;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      border-left: 4px solid var(--gt-gold);
+      box-shadow: var(--gt-shadow-sm);
+    }
+
+    .stat-card h6 {
+      color: var(--gt-navy);
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-card .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--gt-gold);
+    }
+    
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-secondary {
+      background-color: var(--gt-navy);
+      color: var(--gt-white);
+      margin-right: 0.5rem;
+    }
+    
+    .btn-secondary:hover {
+      background-color: var(--gt-navy-dark);
+      color: var(--gt-white);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background-color: var(--gt-gold);
+      color: var(--gt-navy);
+    }
+
+    .btn-primary:hover {
+      background-color: #9B8447;
+      color: var(--gt-navy);
+      transform: translateY(-2px);
+    }
+    
+    #map {
+      height: 70vh;
+      width: 100%;
+      cursor: default;
+      border-radius: 1rem;
+      border: 2px solid var(--gt-navy);
+      box-shadow: var(--gt-shadow-lg);
+    }
+    
+    .applicant-count {
+      text-align: center;
+      padding: 1rem;
+      font-weight: 600;
+      background-color: var(--gt-navy);
+      color: var(--gt-white);
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .map-info {
+      background: var(--card-bg);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      border: 2px solid var(--gt-gold);
+    }
+    
+    .map-info h5 {
+      color: var(--gt-navy);
+      margin-bottom: 0.5rem;
+    }
+    
+    .map-info p {
+      color: var(--text-secondary);
+      margin-bottom: 0;
+    }
+
+    /* Custom cluster styling */
+    .marker-cluster-small {
+      background-color: rgba(179, 163, 105, 0.6);
+    }
+
+    .marker-cluster-small div {
+      background-color: rgba(179, 163, 105, 0.8);
+      color: white;
+      font-weight: bold;
+    }
+
+    .marker-cluster-medium {
+      background-color: rgba(0, 48, 87, 0.6);
+    }
+
+    .marker-cluster-medium div {
+      background-color: rgba(0, 48, 87, 0.8);
+      color: white;
+      font-weight: bold;
+    }
+
+    .marker-cluster-large {
+      background-color: rgba(200, 16, 46, 0.6);
+    }
+
+    .marker-cluster-large div {
+      background-color: rgba(200, 16, 46, 0.8);
+      color: white;
+      font-weight: bold;
+    }
+    
+    /* Leaflet popup styling */
+    .leaflet-popup-content-wrapper {
+      border-radius: 0.5rem;
+      box-shadow: var(--gt-shadow-lg);
+    }
+    
+    .leaflet-popup-content {
+      margin: 0;
+      padding: 1rem;
+      min-width: 250px;
+    }
+
+    .applicant-popup {
+      font-family: var(--gt-font-primary);
+    }
+
+    .applicant-popup h6 {
+      color: var(--gt-navy);
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      border-bottom: 2px solid var(--gt-gold);
+      padding-bottom: 0.5rem;
+    }
+
+    .applicant-popup p {
+      margin: 0.25rem 0;
+      font-size: 0.875rem;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-applied {
+      background-color: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .status-under-review {
+      background-color: #fff3e0;
+      color: #f57c00;
+    }
+
+    .status-interview {
+      background-color: #f3e5f5;
+      color: #7b1fa2;
+    }
+
+    .status-rejected {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+
+    .status-accepted {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    @media (max-width: 768px) {
+      .stats-container {
+        flex-direction: column;
+      }
+
+      .stat-card {
+        min-width: 100%;
+      }
+      
+      #map {
+        height: 60vh;
+      }
+      
+      .btn {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
+        margin-bottom: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'home.index' %}">
+        <i class="fas fa-briefcase"></i>
+        IndeedLite
+      </a>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          {% if user.is_authenticated %}
+            {% if user.profile.is_recruiter %}
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'recruiter_pipeline' %}">
+                  <i class="fas fa-columns"></i>
+                  Kanban
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'job.create' %}">
+                  <i class="fas fa-plus"></i>
+                  Create Job
+                </a>
+              </li>
+            {% endif %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'profile.index' request.user.id %}">
+                <i class="fas fa-user"></i>
+                Profile
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.logout' %}">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container mt-4">
+    <!-- Job Info Card -->
+    <div class="job-info">
+      <h5><i class="fas fa-briefcase me-2"></i>{{ job.title }}</h5>
+      <p><i class="fas fa-building me-2"></i>{{ job.company }}</p>
+      <p><i class="fas fa-map-marker-alt me-2"></i>{{ job.location }}</p>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-container">
+      <div class="stat-card">
+        <h6><i class="fas fa-users me-1"></i>Total Applicants</h6>
+        <div class="stat-value" id="totalApplicants">0</div>
+      </div>
+      <div class="stat-card">
+        <h6><i class="fas fa-map-marked-alt me-1"></i>With Location Data</h6>
+        <div class="stat-value" id="mappedApplicants">0</div>
+      </div>
+      <div class="stat-card">
+        <h6><i class="fas fa-layer-group me-1"></i>Location Clusters</h6>
+        <div class="stat-value" id="clusterCount">0</div>
+      </div>
+    </div>
+
+    <!-- Map Controls -->
+    <div class="map-controls">
+      <h2>
+        <i class="fas fa-map-marked-alt me-2"></i>
+        Applicant Location Map
+      </h2>
+      
+      <!-- Map Info -->
+      <div class="map-info">
+        <h5><i class="fas fa-info-circle me-2"></i>About This Map</h5>
+        <p>This map shows where your applicants are located. Markers are automatically clustered for better visualization. Click on clusters to zoom in and see individual applicants.</p>
+      </div>
+      
+      <div style="text-align: center; margin-top: 1rem;">
+        <a class="btn btn-secondary" href="{% url 'job_detail' job.id %}">
+          <i class="fas fa-arrow-left"></i>
+          Back to Job Details
+        </a>
+        <a class="btn btn-primary" href="{% url 'recommended_users' job.id %}">
+          <i class="fas fa-user-check"></i>
+          View Recommended Candidates
+        </a>
+      </div>
+    </div>
+    
+    <!-- Applicant Count Display -->
+    <div class="applicant-count" id="applicantCount">
+      <i class="fas fa-users me-2"></i>
+      Loading applicant locations...
+    </div>
+    
+    <!-- Map Container -->
+    <div id="map"></div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Leaflet MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    // Initialize map centered on US
+    const map = L.map('map').setView([39.8283, -98.5795], 4);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Create marker cluster group
+    const markers = L.markerClusterGroup({
+      maxClusterRadius: 80,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: true,
+      zoomToBoundsOnClick: true,
+      iconCreateFunction: function(cluster) {
+        const count = cluster.getChildCount();
+        let size = 'small';
+        if (count >= 10) {
+          size = 'large';
+        } else if (count >= 5) {
+          size = 'medium';
+        }
+        return L.divIcon({
+          html: '<div><span>' + count + '</span></div>',
+          className: 'marker-cluster marker-cluster-' + size,
+          iconSize: L.point(40, 40)
+        });
+      }
+    });
+
+    // Add job location marker if available
+    {% if job.latitude and job.longitude %}
+      const jobIcon = L.divIcon({
+        html: '<i class="fas fa-briefcase" style="color: #B3A369; font-size: 24px;"></i>',
+        className: 'job-location-icon',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+      });
+
+      L.marker([{{ job.latitude }}, {{ job.longitude }}], { icon: jobIcon })
+        .addTo(map)
+        .bindPopup('<div class="applicant-popup"><h6><i class="fas fa-briefcase me-1"></i>Job Location</h6><p><strong>{{ job.location }}</strong></p></div>');
+    {% endif %}
+
+    // UI elements
+    const applicantCount = document.getElementById('applicantCount');
+    const totalApplicants = document.getElementById('totalApplicants');
+    const mappedApplicants = document.getElementById('mappedApplicants');
+    const clusterCount = document.getElementById('clusterCount');
+
+    // Load applicants from server
+    function loadApplicants() {
+      const url = "{% url 'applicant_map_data' job.id %}";
+
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const total = data.length;
+          totalApplicants.textContent = total;
+          mappedApplicants.textContent = total;
+          
+          applicantCount.innerHTML = `<i class="fas fa-users me-2"></i>Showing ${total} applicant${total !== 1 ? 's' : ''} with location data`;
+          
+          if (total === 0) {
+            applicantCount.innerHTML = '<i class="fas fa-info-circle me-2"></i>No applicants with location data yet';
+            return;
+          }
+
+          const bounds = [];
+          
+          data.forEach(applicant => {
+            if (applicant.latitude && applicant.longitude) {
+              // Determine status class
+              let statusClass = 'status-applied';
+              const status = applicant.status.toLowerCase();
+              if (status.includes('review')) statusClass = 'status-under-review';
+              else if (status.includes('interview')) statusClass = 'status-interview';
+              else if (status.includes('rejected')) statusClass = 'status-rejected';
+              else if (status.includes('accepted')) statusClass = 'status-accepted';
+
+              const popupContent = `
+                <div class="applicant-popup">
+                  <h6><i class="fas fa-user me-1"></i>${applicant.username}</h6>
+                  <p><strong><i class="fas fa-heading me-1"></i>${applicant.headline}</strong></p>
+                  <p><i class="fas fa-map-marker-alt me-1"></i>${applicant.location}</p>
+                  <p><i class="fas fa-calendar me-1"></i>Applied: ${applicant.applied_at}</p>
+                  <p style="margin-top: 0.5rem;">
+                    <span class="status-badge ${statusClass}">
+                      ${applicant.status}
+                    </span>
+                  </p>
+                  <div style="text-align: center; margin-top: 0.75rem;">
+                    <a href="/jobs/profile/${applicant.id}/" class="btn btn-sm" style="background-color: #003057; color: white; text-decoration: none; padding: 0.375rem 0.75rem; border-radius: 0.25rem; font-size: 0.875rem;">
+                      <i class="fas fa-eye me-1"></i>View Profile
+                    </a>
+                  </div>
+                </div>
+              `;
+              
+              const marker = L.marker([applicant.latitude, applicant.longitude])
+                .bindPopup(popupContent);
+              
+              markers.addLayer(marker);
+              bounds.push([applicant.latitude, applicant.longitude]);
+            }
+          });
+
+          // Add marker cluster to map
+          map.addLayer(markers);
+
+          clusterCount.textContent = Math.ceil(total / 3);
+
+          if (bounds.length > 0) {
+            map.fitBounds(bounds, { padding: [50, 50] });
+          }
+
+          map.on('zoomend', function() {
+            const visibleClusters = document.querySelectorAll('.marker-cluster').length;
+            clusterCount.textContent = visibleClusters || Math.ceil(total / 3);
+          });
+        })
+        .catch(error => {
+          console.error('Error loading applicants:', error);
+          applicantCount.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Error loading applicant data';
+        });
+    }
+
+    // Initial load of applicants
+    loadApplicants();
+  </script>
+</body>
+</html>
+

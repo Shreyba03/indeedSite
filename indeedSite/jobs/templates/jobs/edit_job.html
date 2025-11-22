@@ -8,8 +8,27 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Font Awesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   {% load static %}
   <link href="{% static 'css/style.css' %}" rel="stylesheet">
+  <style>
+    #jobLocationMap {
+      height: 400px;
+      width: 100%;
+      border-radius: 0.5rem;
+      border: 2px solid #003057;
+      margin-top: 1rem;
+      cursor: crosshair;
+    }
+    .map-instructions {
+      background-color: #e7f3ff;
+      border-left: 4px solid #003057;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 0.25rem;
+    }
+  </style>
 </head>
 <body>
   <!-- Navigation Bar -->
@@ -153,6 +172,26 @@
             {{ form.location }}
           </div>
 
+          <!-- Hidden lat/lng fields -->
+          {{ form.latitude }}
+          {{ form.longitude }}
+
+          <!-- Interactive Map for Pinning Location -->
+          <div class="mb-4">
+            <label class="form-label"><i class="fas fa-map-marked-alt"></i> Pin Job Location on Map</label>
+            <div class="map-instructions">
+              <strong><i class="fas fa-info-circle"></i> Instructions:</strong> Click on the map to pin the exact job location. You can also drag the marker to adjust it. The location will be updated with your changes.
+            </div>
+            <div id="jobLocationMap"></div>
+            <small class="text-muted d-block mt-2" id="coordinatesDisplay">
+              {% if job.latitude and job.longitude %}
+                <i class="fas fa-map-pin text-success"></i> Current coordinates: {{ job.latitude }}, {{ job.longitude }}
+              {% else %}
+                Click on the map to set coordinates
+              {% endif %}
+            </small>
+          </div>
+
           <div class="mb-4">
             <label for="salary_min" class="form-label">
               Minimum Salary
@@ -210,7 +249,97 @@
     </div>
   </div>
 
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Initialize map centered on US
+    const map = L.map('jobLocationMap').setView([39.8283, -98.5795], 4);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    let jobMarker = null;
+    const latInput = document.getElementById('id_latitude');
+    const lngInput = document.getElementById('id_longitude');
+    const locationInput = document.getElementById('id_location');
+    const coordinatesDisplay = document.getElementById('coordinatesDisplay');
+
+    // Function to add/update marker
+    function setJobLocation(lat, lng) {
+      if (jobMarker) {
+        map.removeLayer(jobMarker);
+      }
+
+      jobMarker = L.marker([lat, lng], { draggable: true })
+        .addTo(map)
+        .bindPopup('<b><i class="fas fa-briefcase"></i> Job Location</b><br><small>Drag to adjust</small>')
+        .openPopup();
+
+      // Update hidden fields
+      latInput.value = lat;
+      lngInput.value = lng;
+
+      // Update display
+      coordinatesDisplay.innerHTML = `<i class="fas fa-map-pin text-success"></i> Coordinates set: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+      // Handle marker drag
+      jobMarker.on('dragend', (e) => {
+        const newPos = e.target.getLatLng();
+        latInput.value = newPos.lat;
+        lngInput.value = newPos.lng;
+        coordinatesDisplay.innerHTML = `<i class="fas fa-map-pin text-success"></i> Coordinates set: ${newPos.lat.toFixed(6)}, ${newPos.lng.toFixed(6)}`;
+      });
+    }
+
+    // Handle map clicks
+    map.on('click', (e) => {
+      setJobLocation(e.latlng.lat, e.latlng.lng);
+    });
+
+    // Geocode location when user types in location field
+    locationInput.addEventListener('blur', () => {
+      const location = locationInput.value.trim();
+      if (location) {
+        geocodeLocation(location);
+      }
+    });
+
+    // Geocode function using Nominatim
+    function geocodeLocation(location) {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json&limit=1`;
+      
+      fetch(url, {
+        headers: {
+          'User-Agent': 'IndeedLite Job Site'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data && data.length > 0) {
+          const lat = parseFloat(data[0].lat);
+          const lng = parseFloat(data[0].lon);
+          setJobLocation(lat, lng);
+          map.setView([lat, lng], 12);
+        }
+      })
+      .catch(error => {
+        console.error('Geocoding error:', error);
+      });
+    }
+
+    // If editing and lat/lng already exist, show them
+    if (latInput.value && lngInput.value) {
+      const lat = parseFloat(latInput.value);
+      const lng = parseFloat(lngInput.value);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        setJobLocation(lat, lng);
+        map.setView([lat, lng], 12);
+      }
+    }
+  </script>
 </body>
 </html>

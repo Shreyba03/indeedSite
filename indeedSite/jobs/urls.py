@@ -22,6 +22,8 @@ urlpatterns = [
     path('kanaban/', views.recruiter_pipeline, name='recruiter_pipeline'),
     path('kanaban/update/<int:app_id>/', views.update_application_status, name='update_application_status'),
     path('contact/<int:user_id>/', views.send_email, name='send_email'),
-    path('notifications/', views.notifications, name="notificiations")
+    path('notifications/', views.notifications, name="notificiations"),
+    path('<int:job_id>/applicant-map/', views.applicant_map, name='applicant_map'),
+    path('<int:job_id>/applicant-map-data/', views.applicant_map_data, name='applicant_map_data'),
 
 ]

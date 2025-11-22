@@ -250,8 +250,12 @@
                   <i class="fas fa-user-check"></i>
                   View Recommended Users
                 </a>
+                <a href="{% url 'applicant_map' job.id %}" class="btn btn-success w-100">
+                  <i class="fas fa-map-marked-alt"></i>
+                  Applicant Location Map
+                </a>
                 <a href="{% url 'job.edit' job.id %}" class="btn btn-primary w-100">
-                  <i class="fas fa-user-check"></i>
+                  <i class="fas fa-edit"></i>
                   Edit Job Details
                 </a>
               </div>
