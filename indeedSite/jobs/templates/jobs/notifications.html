@@ -1,4 +1,114 @@
-<h1>Candidate Matches</h1>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Candidate Matches</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  {% load static %}
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+<body>
+
+  <!-- COPY YOUR NAVBAR (same as other pages) -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'home.index' %}">
+        <i class="fas fa-briefcase"></i>
+        IndeedLite
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          {% if user.is_authenticated %}
+            {% if user.profile.is_recruiter %}
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'recruiter_pipeline' %}">
+                  <i class="fas fa-columns"></i>
+                  Kanban
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'job.create' %}">
+                  <i class="fas fa-plus"></i>
+                  Create Job
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a class="nav-link active" href="{% url 'notifications' %}">
+                  <i class="fas fa-bell"></i>
+                  Notifications
+                </a>
+              </li>
+            {% endif %}
+
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'job_inbox' 'patlol' %}">
+                <i class="fas fa-envelope"></i> Inbox
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'profile.index' request.user.id %}">
+                <i class="fas fa-user"></i> Profile
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'accounts.logout' %}">
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mt-5">
+
+    <h1 class="mb-4">Candidate Matches</h1>
+
+    {% if notifications %}
+      {% for search, candidates in notifications.items %}
+        <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+            <strong>{{ search.name }}</strong> — {{ candidates.count }} matches
+          </div>
+          <ul class="list-group list-group-flush">
+            {% for candidate in candidates %}
+              <li class="list-group-item">
+                <a href="{% url 'profile.index' candidate.user.id %}">
+                  {{ candidate.user.username }}
+                </a>
+                {% if candidate.headline %}
+                  <span class="text-muted">— {{ candidate.headline }}</span>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted">No candidates found for your saved searches.</p>
+    {% endif %}
+
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+<!-- <h1>Candidate Matches</h1>
 
 {% if notifications %}
     {% for search, candidates in notifications.items %}
@@ -7,7 +117,7 @@
             {% for candidate in candidates %}
                 <li>
                     <a href="{% url 'profile.index' user_id=candidate.user.id %}">
-                        {{ candidate.user.get_full_name }} - {{ candidate.headline }}
+                        {{ candidate.user.username }} - {{ candidate.headline }}
                     </a>
                 </li>
             {% endfor %}
@@ -15,4 +125,4 @@
     {% endfor %}
 {% else %}
     <p>No candidates found for your searches.</p>
-{% endif %}
+{% endif %} -->

@@ -360,6 +360,29 @@
         <i class="fas fa-map-marked-alt me-2"></i>
         Applicant Location Map
       </h2>
+    <!-- new# -->
+      {% if recruiter_jobs %}
+      <div class="mt-3">
+        <label class="form-label fw-bold text-dark">
+          <i class="fas fa-briefcase me-1"></i>Select Job
+        </label>
+
+        <select id="jobSwitcher" class="form-select">
+          {% for j in recruiter_jobs %}
+            <option value="{% url 'applicant_map' j.id %}"
+              {% if j.id == job.id %}selected{% endif %}>
+              {{ j.title }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <script>
+          document.getElementById("jobSwitcher").addEventListener("change", function() {
+            window.location.href = this.value;
+          });
+        </script>
+      </div>
+      {% endif %}
       
       <!-- Map Info -->
       <div class="map-info">

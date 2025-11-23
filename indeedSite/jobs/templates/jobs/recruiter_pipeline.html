@@ -111,6 +111,28 @@
 
 
   <h2 style="margin-bottom: 2rem; text-align:center; color:#003366; font-weight:700;">Recruiter Pipeline</h2>
+  {% if recruiter_jobs %}
+  <div class="container mb-4">
+      <label class="form-label fw-bold">
+          <i class="fas fa-briefcase me-1"></i>Select Job
+      </label>
+
+      <select id="jobSwitcher" class="form-select">
+          {% for j in recruiter_jobs %}
+              <option value="{% url 'recruiter_pipeline_job' j.id %}"
+                  {% if selected_job and j.id == selected_job.id %}selected{% endif %}>
+                  {{ j.title }}
+              </option>
+          {% endfor %}
+      </select>
+
+      <script>
+          document.getElementById("jobSwitcher").addEventListener("change", function () {
+              window.location.href = this.value;
+          });
+      </script>
+  </div>
+  {% endif %}
 
   <div class="kanban-container">
     {% for status, apps in status_groups.items %}
@@ -118,7 +140,10 @@
         <h3>{{ status }}</h3>
         <ul class="kanban-list" data-status="{{ status|lower|slugify }}">
           {% for app in apps %}
-            <li draggable="true" data-id="{{ app.id }}">
+            <!-- <li draggable="true" data-id="{{ app.id }}"> -->
+            <li draggable="true" data-id="{{ app.id }}" 
+              onclick="window.location.href='{% url 'application_detail' app.id %}'"
+              style="cursor:pointer;">
               <strong>{{ app.user.username }}</strong><br>
               {{ app.job.title }}<br>
               <small>{{ app.job.company }}</small>

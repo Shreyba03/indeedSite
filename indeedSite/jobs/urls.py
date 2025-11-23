@@ -14,16 +14,22 @@ urlpatterns = [
     path("map/", views.job_map_page, name="job_map_page"),                              # Renders the page
     path("map-data/", views.job_map_data, name="job_map_data"),                         # Processes map data
     path("create-job/", views.create_job, name="job.create"),                           # Creates a job
-    path("edit-job/<int:job_id>", views.edit_job, name="job.edit"),                           # Creates a job
+    path("edit-job/<int:job_id>", views.edit_job, name="job.edit"),                     # Creates a job
     path("user-list/", views.user_list, name="job.users"),                              # User list
     path("inbox/<str:username>/", views.inbox, name="job_inbox"),                       # Message inbox, kinda like discord
     path("inbox/<str:username>/<int:id>/", views.deleteMsg, name="job_delete_msg"),     # Deletes messages
     path("<int:id>/recommended-users/", views.recommended_users, name="recommended_users"), # Recommends users to recruiters
+    # path('kanaban/', views.recruiter_pipeline, name='recruiter_pipeline'),
+    # Kanban pipeline
     path('kanaban/', views.recruiter_pipeline, name='recruiter_pipeline'),
+    path('kanaban/<int:job_id>/', views.recruiter_pipeline, name='recruiter_pipeline_job'),
     path('kanaban/update/<int:app_id>/', views.update_application_status, name='update_application_status'),
     path('contact/<int:user_id>/', views.send_email, name='send_email'),
-    path('notifications/', views.notifications, name="notificiations"),
+    path('notifications/', views.notifications, name="notifications"),
     path('<int:job_id>/applicant-map/', views.applicant_map, name='applicant_map'),
     path('<int:job_id>/applicant-map-data/', views.applicant_map_data, name='applicant_map_data'),
-
+    path("candidate-search/", views.candidate_search, name="candidate_search"),
+    path("application/<int:app_id>/", views.application_detail, name="application_detail"),
+    path("skill/<int:skill_id>/delete/", views.delete_skill, name="delete_skill"),
+    path("skill/<int:skill_id>/edit/", views.edit_skill, name="edit_skill"),
 ]

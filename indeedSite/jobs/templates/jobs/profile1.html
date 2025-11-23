@@ -391,72 +391,30 @@
       {% endif %}
 
       <!-- Job Applications Section -->
-      <!-- Recruiter: Jobs Posted Section -->
-      {% if template_data.profile.is_recruiter %}
+      {% if template_data.applications %}
         <div class="section-header mt-4">
-          <i class="fas fa-briefcase"></i>
-          Jobs Posted
+          <i class="fas fa-file-alt"></i>
+          Job Applications
         </div>
         <div class="section-content">
-          {% with recruiter_jobs=template_data.jobs_posted %}
-            {% if recruiter_jobs %}
-              <div class="row">
-                {% for job in recruiter_jobs %}
-                  <div class="col-lg-6 mb-3">
-                    <div class="card">
-                      <div class="card-body">
-                        <h5 class="card-title text-gt-navy">{{ job.title }}</h5>
-                        <h6 class="card-subtitle mb-2 text-muted">{{ job.company }}</h6>
-
-                        <a class="btn btn-primary mt-2"
-                          href="{% url 'recruiter_pipeline_job' job.id %}">
-                          <i class="fas fa-columns"></i>
-                          View Kanban
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                {% endfor %}
-              </div>
-            {% else %}
-              <div class="alert alert-info text-center">
-                <i class="fas fa-info-circle fa-2x mb-3 text-gt-gold"></i>
-                <h5>No jobs posted yet</h5>
-                <a class="btn btn-primary mt-2" href="{% url 'job.create' %}">
-                  <i class="fas fa-plus"></i>
-                  Create Job
-                </a>
-              </div>
-            {% endif %}
-          {% endwith %}
-        </div>
-      {% else %}
-        <!-- Normal User: Job Applications -->
-        {% if template_data.applications %}
-          <div class="section-header mt-4">
-            <i class="fas fa-file-alt"></i>
-            Job Applications
-          </div>
-          <div class="section-content">
-            <div class="row">
-              {% for application in template_data.applications %}
-                <div class="col-lg-6 mb-3">
-                  <div class="card">
-                    <div class="card-body">
-                      <h5 class="card-title text-gt-navy">{{ application.job.title }}</h5>
-                      <h6 class="card-subtitle text-muted">{{ application.job.company }}</h6>
-                      <span class="badge bg-info mb-2">{{ application.get_status_display }}</span>
-                      <p class="text-muted small mb-0">
-                        <i class="fas fa-calendar text-gt-gold me-1"></i>
-                        Applied {{ application.applied_at|date:"M d, Y" }}
-                      </p>
-                    </div>
+          <div class="row">
+            {% for application in template_data.applications %}
+              <div class="col-lg-6 mb-3">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title text-gt-navy">{{ application.job.title }}</h5>
+                    <h6 class="card-title text-gt-navy">{{ application.job.company }}</h6>
+                    <span class="badge bg-info mb-2">{{ application.get_status_display }}</span>
+                    <p class="text-muted small mb-0">
+                      <i class="fas fa-calendar text-gt-gold me-1"></i>
+                      Applied {{ application.applied_at|date:"M d, Y" }}
+                    </p>
                   </div>
                 </div>
-              {% endfor %}
-            </div>
+              </div>
+            {% endfor %}
           </div>
-        {% endif %}
+        </div>
       {% endif %}
     </div>
   </div>

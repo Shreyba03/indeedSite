@@ -317,7 +317,7 @@
           <i class="fas fa-ruler me-2"></i>Distance:
         </label>
 
-        <!-- Manual input box -->
+            <!-- Manual input box -->
         <input type="number" id="radiusInput" min="1" max="500" value="50"
           style="width: 90px; padding: 5px; border-radius: 5px;">
         
@@ -331,7 +331,7 @@
     <!-- Job Count Display -->
     <div class="job-count" id="jobCount">
       <i class="fas fa-briefcase me-2"></i>
-      Showing all job locations
+      Loading job locations...
     </div>
     
     <!-- Map Container -->
@@ -365,32 +365,13 @@
     const radiusSlider = document.getElementById('radiusSlider');
     const radiusValue = document.getElementById('radiusValue');
     const jobCount = document.getElementById('jobCount');
-    const radiusInput = document.getElementById('radiusInput');
 
-    // Sync input box with slider
-    radiusInput.addEventListener('input', () => {
-      let val = parseInt(radiusInput.value);
-      if (val < 1) val = 1;
-      if (val > 500) val = 500;
-      
-      radiusSlider.value = val;
-      radiusValue.textContent = `${val} miles`;
-      
-      if (userLocation) {
-        loadJobs(userLocation.lat, userLocation.lng, val);
-        updateRadiusCircle(val);
-      }
-    });
-
-    // Update radius value display and sync with input
+    // Update radius value display
     radiusSlider.addEventListener('input', (e) => {
-      const val = e.target.value;
-      radiusInput.value = val;
-      radiusValue.textContent = `${val} miles`;
-      
+      radiusValue.textContent = `${e.target.value} miles`;
       if (userLocation) {
-        loadJobs(userLocation.lat, userLocation.lng, val);
-        updateRadiusCircle(val);
+        loadJobs(userLocation.lat, userLocation.lng, e.target.value);
+        updateRadiusCircle(e.target.value);
       }
     });
 
@@ -527,12 +508,7 @@
       fetch(url)
         .then(response => response.json())
         .then(data => {
-          // Update job count display based on filter status
-          if (userLocation && radius) {
-            jobCount.innerHTML = `<i class="fas fa-briefcase me-2"></i>Showing jobs within ${radius} miles`;
-          } else {
-            jobCount.innerHTML = `<i class="fas fa-briefcase me-2"></i>Showing all job locations`;
-          }
+          jobCount.innerHTML = `<i class="fas fa-briefcase me-2"></i>Showing ${data.length} job${data.length !== 1 ? 's' : ''}`;
           
           data.forEach(job => {
             if (job.latitude && job.longitude) {

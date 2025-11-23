@@ -1,0 +1,18 @@
+<h1>Candidate Search</h1>
+
+<form method="get">
+    <input type="text" name="q" placeholder="Search by name, skill, location..." value="{{ query }}">
+    <button type="submit">Search</button>
+</form>
+
+<hr>
+
+{% for profile in profiles %}
+<div>
+    <h3>{{ profile.user.username }}</h3>
+    <p>{{ profile.headline }}</p>
+    <p>{{ profile.location }}</p>
+</div>
+{% empty %}
+<p>No candidates found.</p>
+{% endfor %}

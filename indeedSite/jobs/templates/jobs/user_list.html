@@ -110,6 +110,16 @@
   <div class="container mt-5">
     <h1 class="mb-4">{{ template_data.title }}</h1>
 
+    {% if user.is_authenticated and user.profile.is_recruiter and template_data.search_term %}
+      <form action="{% url 'job.users' %}" method="post" class="mb-3">
+        {% csrf_token %}
+        <input type="hidden" name="save_search" value="{{ template_data.search_term }}">
+        <button class="btn btn-outline-success">
+          <i class="fas fa-bookmark"></i> Save this search
+        </button>
+      </form>
+    {% endif %}
+    
     <!-- Search Bar -->
     <form method="get" class="d-flex mb-4">
       <input type="text" name="search" class="form-control me-2" placeholder="Search by username, headline, or skill" value="{{ template_data.search_term }}">
@@ -123,7 +133,11 @@
         <div class="col-md-6 col-lg-4 mb-4">
           <div class="card h-100 shadow-sm">
             <div class="card-body">
-              <h5 class="card-title text-primary">{{ profile.user.username }}</h5>
+              <h5 class="card-title text-primary">
+                <a href="{% url 'profile.index' profile.user.id %}" class="text-decoration-none text-primary">
+                  {{ profile.user.username }}
+                </a>
+              </h5>
 
               {% if profile.headline %}
                 <p class="card-text"><i class="fas fa-quote-left text-muted me-1"></i>{{ profile.headline }}</p>

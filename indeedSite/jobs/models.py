@@ -1,3 +1,4 @@
+#jobs/models.py
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -29,6 +30,9 @@ class Profile(models.Model):
     # IF PROFILE IS A RECRUITER
     is_recruiter = models.BooleanField(default=False)
     company = models.CharField(max_length=255, blank=True)
+
+    # IF PROFILE IS UPDATES
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return f"{self.user.username}'s Profile"
@@ -81,6 +85,7 @@ class Job(models.Model):
     remote_friendly = models.BooleanField(default=False)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
+    posted_by = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return f"{self.title} @ {self.company}"
@@ -123,3 +128,13 @@ class Search(models.Model):
     def __str__(self):
         return f"{self.recruiter.username} - {self.name}"
 
+class SearchMatch(models.Model):
+    search = models.ForeignKey(Search, on_delete=models.CASCADE, related_name="matches")
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    matched_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('search', 'profile')
+
+    def __str__(self):
+        return f"{self.profile.user.username} matched {self.search.name}"

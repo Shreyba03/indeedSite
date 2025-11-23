@@ -1,6 +1,7 @@
+#jobs/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
-from .models import Job, Profile, Application, Skill, Experience, Message, Search
+from .models import Job, Profile, Application, Skill, Experience, Message, Search, SearchMatch
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .forms import ProfileForm, JobForm, ContactCandidateForm
 from django.http import JsonResponse, HttpResponse
@@ -10,6 +11,8 @@ import csv
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
+from django.utils import timezone
+from math import radians, sin, cos, asin, sqrt
 
 def index(request):
     jobs = Job.objects.all()
@@ -43,7 +46,7 @@ def show(request, id):
     
 #     return redirect('jobs.show', id=job_id)
 
-def profile(request, user_id):
+# def profile(request, user_id):
     user = get_object_or_404(User, id=user_id)
     profile = get_object_or_404(Profile, user=user)
     
@@ -58,6 +61,32 @@ def profile(request, user_id):
     template_data['experience_list'] = profile.experience_list.all()
     
     return render(request, 'jobs/profile.html', {'template_data': template_data})
+
+def profile(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    profile = get_object_or_404(Profile, user=user)
+    
+    applications = Application.objects.filter(user=user).select_related('job')
+
+    template_data = {}
+    template_data['profile'] = profile
+    template_data['owner'] = user
+    template_data['skills_list'] = profile.skill_list.all()
+    template_data['experience_list'] = profile.experience_list.all()
+
+    # Show job applications only for normal users (not recruiters)
+    if user == request.user and not profile.is_recruiter:
+        template_data['applications'] = applications
+
+    # NEW: Jobs posted by the recruiter
+    if profile.is_recruiter:
+        template_data['jobs_posted'] = Job.objects.filter(posted_by=profile)
+    else:
+        template_data['jobs_posted'] = None
+
+    return render(request, 'jobs/profile.html', {
+        'template_data': template_data
+    })
 
 @login_required
 def edit_profile(request, user_id):
@@ -76,6 +105,26 @@ def edit_profile(request, user_id):
 
     return render(request, 'jobs/edit_profile.html', {'template_data': {'form': form}})
 
+# @login_required
+# def edit_skills(request, user_id):
+#     profile = get_object_or_404(Profile, user__id=user_id)
+
+#     if request.user != profile.user:
+#         return redirect('home.index')
+
+#     skills = profile.skill_list.all()
+
+#     if request.method == 'POST':
+#         name = request.POST.get('name')
+#         proficiency = request.POST.get('proficiency', 'Intermediate')
+
+#         if name:
+#             Skill.objects.create(profile=profile, name=name, proficiency=proficiency)
+
+#         return redirect('skills.edit', user_id=profile.user.id)
+
+#     return render(request, 'jobs/edit_skills.html', {'profile': profile, 'skills': skills})
+
 @login_required
 def edit_skills(request, user_id):
     profile = get_object_or_404(Profile, user__id=user_id)
@@ -84,6 +133,9 @@ def edit_skills(request, user_id):
         return redirect('home.index')
 
     skills = profile.skill_list.all()
+
+    # Add proficiency levels here
+    proficiency_levels = ["Beginner", "Intermediate", "Advanced", "Expert"]
 
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -94,8 +146,33 @@ def edit_skills(request, user_id):
 
         return redirect('skills.edit', user_id=profile.user.id)
 
-    return render(request, 'jobs/edit_skills.html', {'profile': profile, 'skills': skills})
+    return render(request, 'jobs/edit_skills.html', {
+        'profile': profile,
+        'skills': skills,
+        'proficiency_levels': proficiency_levels,
+    })
 
+@login_required
+def delete_skill(request, skill_id):
+    skill = get_object_or_404(Skill, id=skill_id, profile=request.user.profile)
+
+    if request.method == "POST":
+        skill.delete()
+        return redirect("skills.edit", user_id=request.user.id)
+
+    return redirect("skills.edit", user_id=request.user.id)
+
+@login_required
+def edit_skill(request, skill_id):
+    skill = get_object_or_404(Skill, id=skill_id, profile=request.user.profile)
+
+    if request.method == "POST":
+        skill.name = request.POST.get("name")
+        skill.proficiency = request.POST.get("proficiency")
+        skill.save()
+        return redirect('skills.edit', user_id=request.user.id)
+
+    return redirect('skills.edit', user_id=request.user.id)
 
 @login_required
 def edit_experience(request, user_id):
@@ -175,7 +252,7 @@ def apply_to_job(request, id):
 
     if request.method == "POST":
         note = request.POST.get("note", "")
-        Application.objects.create(user=request.user, job=job, note=note, status="Applied")
+        Application.objects.create(user=request.user, job=job, note=note, status="applied")
         messages.success(request, "Your application has been submitted!")
         return redirect("job_detail", id=job.id)
 
@@ -204,10 +281,59 @@ def job_map_page(request):
     """Renders the HTML page containing the map."""
     return render(request, "jobs/job_map.html")
 
+# def job_map_data(request):
+#     """Returns JSON data for all jobs with lat/lng."""
+#     jobs = Job.objects.values("id", "title", "company", "location", "latitude", "longitude")
+#     return JsonResponse(list(jobs), safe=False)
+
 def job_map_data(request):
-    """Returns JSON data for all jobs with lat/lng."""
-    jobs = Job.objects.values("id", "title", "company", "location", "latitude", "longitude")
-    return JsonResponse(list(jobs), safe=False)
+    """
+    Returns JSON of job locations.
+    Applies distance filtering when lat, lng, and radius are passed.
+    """
+
+    lat = request.GET.get("lat")
+    lng = request.GET.get("lng")
+    radius = request.GET.get("radius")
+
+    # jobs = Job.objects.all()
+    jobs = Job.objects.exclude(latitude__isnull=True).exclude(longitude__isnull=True)
+
+    # If no geo-filter applied, send all jobs
+    if not (lat and lng and radius):
+        data = list(jobs.values("id", "title", "company", "location", "latitude", "longitude"))
+        return JsonResponse(data, safe=False)
+
+    # Convert to float
+    lat = float(lat)
+    lng = float(lng)
+    radius = float(radius)
+
+    results = []
+
+    for job in jobs:
+        if job.latitude is None or job.longitude is None:
+            continue
+
+        if job.latitude and job.longitude:
+            dist = haversine_distance(lat, lng, job.latitude, job.longitude)
+
+            if dist <= radius:
+                results.append({
+                    "id": job.id,
+                    "title": job.title,
+                    "company": job.company,
+                    "location": job.location,
+                    "latitude": job.latitude,
+                    "longitude": job.longitude,
+                    "distance": round(dist, 1)
+                })
+    
+    # Sort nearest → farthest
+    results.sort(key=lambda x: x["distance"])
+
+    # Return filtered results
+    return JsonResponse(results, safe=False)
 
 ##################################################
 # RECRUITER VIEWS
@@ -241,11 +367,13 @@ def create_job(request):
         form = JobForm(request.POST)
         if form.is_valid():
             job = form.save(commit=False)
+            job.posted_by = request.user.profile
             # If latitude and longitude are not provided via the map, geocode the location
             if not job.latitude or not job.longitude:
                 lat, lon = get_lat_long(job.location)
                 job.latitude = lat
                 job.longitude = lon
+            
             job.save()
             return redirect('job_list')
     else:
@@ -262,7 +390,8 @@ def edit_job(request, job_id):
         return redirect('home.index')  # block non-recruiters
 
     # Get the job, only allow if it belongs to the user's company
-    job = get_object_or_404(Job, id=job_id, company=profile.company)
+    # job = get_object_or_404(Job, id=job_id, company=profile.company)
+    job = get_object_or_404(Job, id=job_id, posted_by=profile)
 
     if request.method == 'POST':
         form = JobForm(request.POST, instance=job)
@@ -281,31 +410,35 @@ def edit_job(request, job_id):
     return render(request, 'jobs/edit_job.html', {'form': form, 'job': job})
 
 def user_list(request):
-    search_term = request.GET.get('search', '')
-
-    profiles = Profile.objects.select_related('user').prefetch_related('skill_list', 'project_list')
+    search_term = request.GET.get("search", "")
+    profiles = Profile.objects.exclude(is_recruiter=True)
 
     if search_term:
-        if request.user.is_authenticated:
-            Search.objects.get_or_create(
-                recruiter=request.user,
-                search_term=search_term,
-                defaults={'name': f"Search: {search_term}"}
-            )
-
         profiles = profiles.filter(
             Q(user__username__icontains=search_term) |
-            Q(headline__icontains=search_term) |
-            Q(skill_list__name__icontains=search_term)
-        ).distinct()
+            Q(headline__icontains=search_term)
+        )
+
+    # ---------- NEW: Save search ----------
+    if request.method == "POST" and request.POST.get("save_search"):
+        if request.user.is_authenticated and request.user.profile.is_recruiter:
+            term = request.POST.get("save_search")
+
+            Search.objects.get_or_create(
+                recruiter=request.user,
+                search_term=term,
+                defaults={"name": f"Search: {term}", "last_run": timezone.now()}
+            )
+
+            messages.success(request, "Search saved!")
+            return redirect("job.users")
 
     template_data = {
-        'title': 'User Profiles',
-        'profiles': profiles,
-        'search_term': search_term,
+        "title": "Candidate Search",
+        "profiles": profiles,
+        "search_term": search_term,
     }
-
-    return render(request, 'jobs/user_list.html', {'template_data': template_data})
+    return render(request, "jobs/user_list.html", {"template_data": template_data})
 
 @login_required
 def inbox(request, username=None):
@@ -378,8 +511,8 @@ def recommended_users(request, id):
 
     return render(request, 'jobs/recommended_users.html', {'template_data':template_data})
 
-@login_required
-def recruiter_pipeline(request):
+# @login_required
+# def recruiter_pipeline(request):
     """Display applications grouped by status."""
     # If recruiters have profiles with company info, filter by company
     if hasattr(request.user, 'profile') and request.user.profile.is_recruiter:
@@ -404,6 +537,50 @@ def recruiter_pipeline(request):
         'status_groups': status_groups
     })
 
+@login_required
+def recruiter_pipeline(request, job_id=None):
+    """Display applicants grouped by status for a selected job."""
+
+    # Must be a recruiter
+    if not request.user.profile.is_recruiter:
+        return redirect("home.index")
+
+    # Get all jobs posted by this recruiter
+    recruiter_jobs = Job.objects.filter(posted_by=request.user.profile)
+
+    # If recruiter has no jobs → show empty board
+    if not recruiter_jobs.exists():
+        return render(request, "jobs/recruiter_pipeline.html", {
+            "status_groups": {},
+            "recruiter_jobs": recruiter_jobs,
+            "selected_job": None,
+        })
+
+    # If no job selected → default to first job
+    if job_id is None:
+        selected_job = recruiter_jobs.first()
+    else:
+        selected_job = get_object_or_404(
+            Job,
+            id=job_id,
+            posted_by=request.user.profile,
+        )
+
+    # Fetch applications for ONLY the selected job
+    applications = Application.objects.filter(job=selected_job)
+    print("Applications for selected job:", applications)
+    print("Count:", applications.count())
+
+    # Group applications by status
+    status_groups = {}
+    for code, label in Application.STATUS_CHOICES:
+        status_groups[label] = applications.filter(status=code)
+
+    return render(request, "jobs/recruiter_pipeline.html", {
+        "status_groups": status_groups,
+        "recruiter_jobs": recruiter_jobs,
+        "selected_job": selected_job,
+    })
 
 @login_required
 def update_application_status(request, app_id):
@@ -457,39 +634,149 @@ Message from recruiter: {recruiter_profile.email}
         'candidate': candidate_profile
     })
 
-def notifications(request):
+# def notifications(request):
+#     recruiter = request.user
+#     saved_searches = recruiter.saved_searches.all()
+#     notifications = {}
+
+#     for search in saved_searches:
+#         # Search across username, headline, and skills
+#         candidates = Profile.objects.filter(
+#             Q(user__username__icontains=search.search_term) |
+#             Q(headline__icontains=search.search_term) |
+#             Q(skill_list__name__icontains=search.search_term)
+#         ).exclude(user=recruiter).distinct()
+
+#         # NEW: show only new or updated candidates since last check
+#         if search.last_run:
+#             candidates = candidates.filter(
+#                 Q(user__date_joined__gt=search.last_run) |
+#                 Q(updated_at__gt=search.last_run)
+#             )
+
+#         if candidates.exists():
+#             notifications[search] = candidates
+
+#         # Update last run timestamp
+#         search.last_run = timezone.now()
+#         search.save()
+
+#     return render(request, "jobs/notifications.html", {"notifications": notifications})
+
+
+# def notifications(request):
     recruiter = request.user
-    searches = recruiter.saved_searches.order_by('-created_at')[:3]  # last 10 searches
+    saved_searches = recruiter.saved_searches.all()
+
     notifications = {}
 
-    for search in searches:
-        profiles = Profile.objects.select_related('user').prefetch_related('skill_list', 'project_list')
+    for search in saved_searches:
 
-        if search.search_term:
-            profiles = profiles.filter(
-                Q(user__username__icontains=search.search_term) |
-                Q(headline__icontains=search.search_term) |
-                Q(skill_list__name__icontains=search.search_term)
-            ).distinct()
+        # Full matching logic
+        candidates = Profile.objects.filter(
+            Q(user__username__icontains=search.search_term) |
+            Q(headline__icontains=search.search_term) |
+            Q(location__icontains=search.search_term) |
+            Q(skill_list__name__icontains=search.search_term)
+        ).distinct().exclude(user=recruiter)
 
-        if profiles.exists():
-            notifications[search] = profiles
+        new_matches = []
 
-    return render(request, 'jobs/notifications.html', {'notifications': notifications})
+        for candidate in candidates:
+            already_matched = SearchMatch.objects.filter(
+                search=search,
+                profile=candidate
+            ).exists()
+
+            if not already_matched:
+                # This is a *new* match → notify recruiter
+                new_matches.append(candidate)
+
+                # Record the match so we don't notify again
+                SearchMatch.objects.create(search=search, profile=candidate)
+
+        if new_matches:
+            notifications[search] = new_matches
+
+        # update last_run for UI purposes (optional)
+        search.last_run = timezone.now()
+        search.save()
+
+    return render(request, "jobs/notifications.html", {
+        "notifications": notifications
+    })
+
+@login_required
+def notifications(request):
+    recruiter = request.user
+    saved_searches = recruiter.saved_searches.all()
+
+    notifications = {}
+
+    for search in saved_searches:
+
+        # Find all candidates matching search (same as before)
+        candidates = Profile.objects.filter(
+            Q(user__username__icontains=search.search_term) |
+            Q(headline__icontains=search.search_term) |
+            Q(location__icontains=search.search_term) |
+            Q(skill_list__name__icontains=search.search_term)
+        ).distinct().exclude(user=recruiter)
+
+        # 1. Create SearchMatch entries for *new* matches
+        for candidate in candidates:
+            SearchMatch.objects.get_or_create(
+                search=search,
+                profile=candidate
+            )
+
+        # 2. Instead of showing only new matches,
+        #    show ALL matches ever recorded for this search.
+        all_matches = SearchMatch.objects.filter(search=search).select_related('profile')
+
+        if all_matches.exists():
+            notifications[search] = [match.profile for match in all_matches]
+
+        # update timestamp (optional)
+        search.last_run = timezone.now()
+        search.save()
+
+    return render(request, "jobs/notifications.html", {
+        "notifications": notifications
+    })
 
 @login_required
 def applicant_map(request, job_id):
     """Show a map with applicant locations clustered by geographic area."""
     job = get_object_or_404(Job, id=job_id)
-    
+
+    print("Recruiter company:", request.user.profile.company)
+    print("Jobs for recruiter:", Job.objects.filter(company=request.user.profile.company))
+
     # Check if user is a recruiter and has access to this job
     if not hasattr(request.user, 'profile') or not request.user.profile.is_recruiter:
         return redirect('home.index')
     
-    if job.company != request.user.profile.company:
+    recruiter_jobs = Job.objects.filter(posted_by=request.user.profile)
+    
+    #if job.company != request.user.profile.company:
+    # if job.company != request.user.profile:
+    #     print("DEBUG: redirecting — permission failed")
+    #     return redirect('home.index')
+
+    # User must be recruiter
+    if not request.user.profile.is_recruiter:
+        return redirect('home.index')
+
+    # Recruiter must have created the job
+    if job.posted_by != request.user.profile:
         return redirect('home.index')
     
-    return render(request, 'jobs/applicant_map.html', {'job': job})
+    # return render(request, 'jobs/applicant_map.html', {'job': job})
+    return render(request, 'jobs/applicant_map.html', {
+        'job': job,
+        'recruiter_jobs': recruiter_jobs,
+    })
 
 @login_required
 def applicant_map_data(request, job_id):
@@ -500,7 +787,8 @@ def applicant_map_data(request, job_id):
     if not hasattr(request.user, 'profile') or not request.user.profile.is_recruiter:
         return JsonResponse({'error': 'Unauthorized'}, status=403)
     
-    if job.company != request.user.profile.company:
+    #if job.company != request.user.profile.company:
+    if job.posted_by != request.user.profile:
         return JsonResponse({'error': 'Unauthorized'}, status=403)
     
     # Get all applications for this job
@@ -522,3 +810,50 @@ def applicant_map_data(request, job_id):
             })
     
     return JsonResponse(applicant_data, safe=False)
+
+@login_required
+def candidate_search(request):
+    query = request.GET.get("search", "").strip()
+
+    if query:
+        profiles = Profile.objects.filter(
+            Q(user__username__icontains=query) |
+            Q(headline__icontains=query) |
+            Q(skill_list__name__icontains=query)
+        ).distinct()
+    else:
+        profiles = Profile.objects.all()
+
+    template_data = {
+        "title": "Candidate Search",
+        "profiles": profiles,
+        "search_term": query
+    }
+
+    return render(request, "jobs/user_list.html", {"template_data": template_data})
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    """
+    Calculate geodesic distance between two lat/lng points in miles.
+    """
+    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a))
+    miles = 3958.8 * c   # Earth radius in miles
+    return miles
+
+@login_required
+def application_detail(request, app_id):
+    app = get_object_or_404(Application, id=app_id)
+
+    # Permission check:
+    # recruiter who posted the job OR the applicant themselves
+    if request.user != app.user and request.user.profile != app.job.posted_by:
+        return redirect("home.index")
+
+    return render(request, "jobs/application_detail.html", {
+        "app": app
+    })

@@ -133,7 +133,6 @@
     <div class="row justify-content-center">
       <div class="col-lg-8">
         <!-- Current Skills Section -->
-        <!-- Current Skills Section -->
         <div class="card shadow-gt-lg mb-4">
           <div class="card-header">
             <h3 class="mb-0">
@@ -145,29 +144,12 @@
               <div class="row">
                 {% for skill in skills %}
                   <div class="col-md-6 mb-3">
-                    <div class="skill-item d-flex justify-content-between align-items-center p-3 border rounded shadow-sm">
+                    <div class="skill-item d-flex justify-content-between align-items-center p-3 border rounded">
                       <div>
                         <h6 class="mb-1">{{ skill.name }}</h6>
                         <span class="badge bg-gt-gold text-dark">{{ skill.proficiency }}</span>
                       </div>
-
-                      <div class="d-flex gap-3">
-                        <!-- Edit Skill Button -->
-                        <button
-                          class="btn btn-sm btn-outline-primary"
-                          data-bs-toggle="modal"
-                          data-bs-target="#editSkillModal{{ skill.id }}">
-                          <i class="fas fa-edit"></i>
-                        </button>
-
-                        <!-- Delete Skill -->
-                        <form method="POST" action="{% url 'delete_skill' skill.id %}">
-                          {% csrf_token %}
-                          <button class="btn btn-sm btn-outline-danger">
-                            <i class="fas fa-trash"></i>
-                          </button>
-                        </form>
-                      </div>
+                      <i class="fas fa-check-circle text-success"></i>
                     </div>
                   </div>
                 {% endfor %}
@@ -181,42 +163,6 @@
             {% endif %}
           </div>
         </div>
-
-        <!-- ALL EDIT SKILL MODALS (outside the grid) -->
-        {% for skill in skills %}
-          <div class="modal fade" id="editSkillModal{{ skill.id }}" tabindex="-1">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <form method="POST" action="{% url 'edit_skill' skill.id %}">
-                  {% csrf_token %}
-                  <div class="modal-header">
-                    <h5 class="modal-title">Edit Skill</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                  </div>
-
-                  <div class="modal-body">
-                    <label class="form-label">Skill Name</label>
-                    <input type="text" name="name" class="form-control" value="{{ skill.name }}">
-
-                    <label class="form-label mt-3">Proficiency</label>
-                    <select name="proficiency" class="form-select">
-                      {% for level in proficiency_levels %}
-                        <option value="{{ level }}" {% if skill.proficiency == level %}selected{% endif %}>
-                          {{ level }}
-                        </option>
-                      {% endfor %}
-                    </select>
-                  </div>
-
-                  <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        {% endfor %}
 
         <!-- Add New Skill Form -->
         <div class="card shadow-gt-lg">
