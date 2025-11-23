@@ -1,131 +1,8 @@
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IndeedLite - Find Your Next Career Opportunity</title>
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Font Awesome -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <!-- Custom CSS -->
-  {% load static %}
-  <link href="{% static 'css/style.css' %}" rel="stylesheet">
-  <style>
-    #profileLocationMap {
-      height: 400px;
-      width: 100%;
-      border-radius: 0.5rem;
-      border: 2px solid #003057;
-      margin-top: 1rem;
-      cursor: crosshair;
-    }
-    .map-instructions {
-      background-color: #e7f3ff;
-      border-left: 4px solid #003057;
-      padding: 1rem;
-      margin-top: 0.5rem;
-      border-radius: 0.25rem;
-    }
-  </style>
-</head>
-<body>
-  <!-- Navigation Bar -->
-  <nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container">
-      <a class="navbar-brand" href="{% url 'home.index' %}">
-        <i class="fas fa-briefcase"></i>
-        IndeedLite
-      </a>
-  
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-  
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-  
-          {% if user.is_authenticated %}
-            {% if user.profile.is_recruiter %}
-              <!-- Links for recruiters -->
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'recruiter_pipeline' %}">
-                  <i class="fas fa-columns"></i>
-                  Kanban
-                </a>
-              </li>
+{% block title %}IndeedLite - Find Your Next Career Opportunity{% endblock %}
 
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'job.create' %}">
-                  <i class="fas fa-plus"></i>
-                  Create Job
-                </a>
-              </li>
-              
-            {% else %}
-              <!-- Links for normal users -->
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'job_list' %}">
-                  <i class="fas fa-briefcase"></i>
-                  Jobs
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'recommended_jobs' %}">
-                  <i class="fas fa-star"></i>
-                  Recommended
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'job_map_page' %}">
-                  <i class="fas fa-map-marker-alt"></i>
-                  Job Map
-                </a>
-              </li>
-            {% endif %}
-  
-            <!-- Links common to both recruiters and normal users -->
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'job_inbox' 'patlol' %}">
-                <i class="fas fa-envelope"></i>
-                Inbox
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'profile.index' request.user.id %}">
-                <i class="fas fa-user"></i>
-                Profile
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'accounts.logout' %}">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-              </a>
-            </li>
-          {% else %}
-            <!-- Links for non-authenticated users -->
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'accounts.login' %}">
-                <i class="fas fa-sign-in-alt"></i>
-                Login
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'accounts.signup' %}">
-                <i class="fas fa-user-plus"></i>
-                Sign Up
-              </a>
-            </li>
-          {% endif %}
-  
-        </ul>
-      </div>
-    </div>
-  </nav>
+{% block content %}
   
 
   <!-- Main Content -->
@@ -367,3 +244,4 @@
   </script>
 </body>
 </html>
+{% endblock content %}

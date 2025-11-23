@@ -123,7 +123,11 @@
     <!-- Chat Area -->
     <div class="chat-area">
         {% if selected_user %}
-            <h3>Chat with {{ selected_user.username }}</h3>
+            <h3>Chat with 
+              <a href="{% url 'profile.index' selected_user.id %}">
+                {{ selected_user.username }}
+              </a>
+            </h3>
             <div class="messages">
                 {% for msg in messages %}
                     <div class="message {% if msg.sender.username == user.username %}sent{% else %}received{% endif %}">
