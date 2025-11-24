@@ -114,8 +114,13 @@
     <div class="sidebar">
         <h3>Users</h3>
         <ul>
-            {% for user in users %}
-                <li><a href="{% url 'job_inbox' user.username %}">{{ user.username }}</a></li>
+            {% for item in users %}
+                <li>
+                    <a href="{% url 'job_inbox' item.user.username %}">
+                        <strong>{{ item.user.username }}</strong><br>
+                        <small class="text-muted">{{ item.preview }}</small>
+                    </a>
+                </li>
             {% endfor %}
         </ul>
     </div>
@@ -195,6 +200,15 @@
 
 .sidebar ul li a:hover {
     background-color: #e6f0ff;
+}
+
+.sidebar ul li {
+    margin-bottom: 12px;
+}
+
+.sidebar ul li a small {
+    font-size: 0.8rem;
+    color: #666;
 }
 
 /* Chat Area */

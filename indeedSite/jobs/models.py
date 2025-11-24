@@ -37,6 +37,23 @@ class Profile(models.Model):
     def __str__(self):
         return f"{self.user.username}'s Profile"
     
+    def required_fields_missing(self):
+        missing = []
+
+        if not self.headline:
+            missing.append("Headline")
+
+        if not self.education:
+            missing.append("Education")
+
+        if not self.email:
+            missing.append("Email")
+
+        if not self.location:
+            missing.append("Location")
+
+        return missing
+    
 class Project(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='project_list')
     name = models.CharField(max_length=100)

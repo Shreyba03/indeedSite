@@ -244,6 +244,16 @@ def job_detail(request, id):
 def apply_to_job(request, id):
     job = get_object_or_404(Job, id=id)
 
+    profile = Profile.objects.get(user=request.user)
+    missing = profile.required_fields_missing()
+
+    if missing:
+        messages.error(
+            request,
+            "Please complete your profile before applying. Missing: " + ", ".join(missing)
+        )
+        return redirect("profile.edit", user_id=request.user.id)
+
     # Check if user already applied to this job
     existing_application = Application.objects.filter(user=request.user, job=job).first()
     if existing_application:
@@ -443,6 +453,24 @@ def user_list(request):
 @login_required
 def inbox(request, username=None):
     users = User.objects.exclude(id=request.user.id)
+
+    user_previews = []
+
+    for u in users:
+        last_msg = Message.objects.filter(
+            sender__in=[request.user, u],
+            receiver__in=[request.user, u]
+        ).order_by('-timestamp').first()
+
+        preview = ""
+        if last_msg:
+            preview = last_msg.content[:20] + ("..." if len(last_msg.content) > 20 else "")
+
+        user_previews.append({
+            "user": u,
+            "preview": preview
+        })
+
     selected_user = None
     messages = []
 
@@ -467,7 +495,7 @@ def inbox(request, username=None):
         ).order_by('timestamp')
 
     return render(request, 'jobs/inbox.html', {
-        'users': users,
+        'users': user_previews,
         'selected_user': selected_user,
         'messages': messages
     })
