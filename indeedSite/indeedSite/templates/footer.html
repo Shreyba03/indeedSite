@@ -10,18 +10,28 @@
   
         <!-- Quick Links -->
         <div class="col-md-4 mb-3">
-          <h5>Quick Links</h5>
-          <ul class="list-unstyled">
-            <li><a href="{% url 'home.index' %}" class="text-white text-decoration-none">Home</a></li>
-            <li><a href="{% url 'job_list' %}" class="text-white text-decoration-none">Jobs</a></li>
-            <li><a href="{% url 'recommended_jobs' %}" class="text-white text-decoration-none">Recommended</a></li>
-            <li><a href="{% url 'job_map_page' %}" class="text-white text-decoration-none">Job Map</a></li>
-          </ul>
+          <h5 style="color: #FFFFFF;">Quick Links</h5>
+            <ul class="list-unstyled">
+
+              {% if user.is_authenticated and user.profile.is_recruiter %}
+                  <li><a href="{% url 'home.index' %}" class="text-white text-decoration-none">Home</a></li>
+                  <li><a href="{% url 'recruiter_pipeline' %}" class="text-white text-decoration-none">Kanban</a></li>
+                  <li><a href="{% url 'candidate_search' %}" class="text-white text-decoration-none">Candidate Search</a></li>
+                  <li><a href="{% url 'job.create' %}" class="text-white text-decoration-none">Create Job</a></li>
+
+              {% else %}
+                  <li><a href="{% url 'home.index' %}" class="text-white text-decoration-none">Home</a></li>
+                  <li><a href="{% url 'job_list' %}" class="text-white text-decoration-none">Jobs</a></li>
+                  <li><a href="{% url 'recommended_jobs' %}" class="text-white text-decoration-none">Recommended</a></li>
+                  <li><a href="{% url 'job_map_page' %}" class="text-white text-decoration-none">Job Map</a></li>
+              {% endif %}
+
+            </ul>
         </div>
   
         <!-- Contact -->
         <div class="col-md-4 mb-3">
-          <h5>Contact</h5>
+          <h5 style="color: #FFFFFF;">Contact</h5>
           <p>
             <p>
                 <i class="fab fa-github me-2"></i>

@@ -572,7 +572,8 @@ def recruiter_pipeline(request, job_id=None):
     # Must be a recruiter
     if not request.user.profile.is_recruiter:
         return redirect("home.index")
-
+    
+    
     # Get all jobs posted by this recruiter
     recruiter_jobs = Job.objects.filter(posted_by=request.user.profile)
 
@@ -588,11 +589,16 @@ def recruiter_pipeline(request, job_id=None):
     if job_id is None:
         selected_job = recruiter_jobs.first()
     else:
-        selected_job = get_object_or_404(
-            Job,
-            id=job_id,
-            posted_by=request.user.profile,
-        )
+        # selected_job = get_object_or_404(
+        #     Job,
+        #     id=job_id,
+        #     posted_by=request.user.profile,
+        # )
+        selected_job = recruiter_jobs.filter(id=job_id).first()
+
+        if selected_job is None:
+            # Another recruiter clicked job → redirect safely
+            return redirect("recruiter_pipeline")
 
     # Fetch applications for ONLY the selected job
     applications = Application.objects.filter(job=selected_job)

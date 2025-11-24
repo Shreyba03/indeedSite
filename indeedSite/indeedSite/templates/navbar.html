@@ -10,33 +10,61 @@
   
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
-  
+
           {% if user.is_authenticated %}
+            
+            {# ===================== RECRUITER NAV ===================== #}
             {% if user.profile.is_recruiter %}
-              <li class="nav-item"><a class="nav-link" href="{% url 'recruiter_pipeline' %}">
-                <i class="fas fa-columns"></i> Kanban</a>
+
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'recruiter_pipeline' %}">
+                  <i class="fas fa-columns"></i> Kanban
+                </a>
               </li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'job.create' %}">
-                <i class="fas fa-plus"></i> Create Job</a>
+
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'job.create' %}">
+                  <i class="fas fa-plus"></i> Create Job
+                </a>
               </li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'candidate_search' %}">
-                <i class="fas fa-globe"></i> Candidate Search</a>
+
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'candidate_search' %}">
+                  <i class="fas fa-globe"></i> Candidate Search
+                </a>
               </li>
+
             {% else %}
-              <li class="nav-item"><a class="nav-link" href="{% url 'recommended_jobs' %}">
-                <i class="fas fa-star"></i> Recommended</a>
+            {# ===================== REGULAR USER NAV ===================== #}
+
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'job_list' %}">
+                  <i class="fas fa-briefcase"></i> Jobs
+                </a>
               </li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'job_map_page' %}">
-                <i class="fas fa-map-marker-alt"></i> Job Map</a>
+
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'recommended_jobs' %}">
+                  <i class="fas fa-star"></i> Recommended
+                </a>
               </li>
+
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'job_map_page' %}">
+                  <i class="fas fa-map-marker-alt"></i> Job Map
+                </a>
+              </li>
+
             {% endif %}
-  
+
+            {# ===================== COMMON LINKS ===================== #}
+
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'job_inbox' 'patlol' %}">
+              <a class="nav-link" href="{% url 'job_inbox' user.username %}">
                 <i class="fas fa-envelope"></i> Inbox
               </a>
             </li>
-  
+
             <li class="nav-item">
               <a class="nav-link" href="{% url 'profile.index' request.user.id %}">
                 <i class="fas fa-user"></i> Profile
@@ -44,24 +72,22 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link position-relative" href="{% url 'notifications' %}">
-                  <i class="fas fa-bell"></i> Notifications
-                  {% if new_notifications_count > 0 %}
-                    <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">{{ new_notifications_count }}</span>
-                  {% endif %}
-                </a>
-              </li>
-
-            <li class="nav-item"><a class="nav-link" href="{% url 'job_list' %}">
-                <i class="fas fa-briefcase"></i> Jobs</a>
+              <a class="nav-link position-relative" href="{% url 'notifications' %}">
+                <i class="fas fa-bell"></i> Notifications
+                {% if new_notifications_count > 0 %}
+                  <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                    {{ new_notifications_count }}
+                  </span>
+                {% endif %}
+              </a>
             </li>
-  
+
             <li class="nav-item">
               <a class="nav-link" href="{% url 'accounts.logout' %}">
                 <i class="fas fa-sign-out-alt"></i> Logout
               </a>
             </li>
-  
+
           {% else %}
             <li class="nav-item"><a class="nav-link" href="{% url 'accounts.login' %}">
               <i class="fas fa-sign-in-alt"></i> Login</a>
@@ -70,9 +96,8 @@
               <i class="fas fa-user-plus"></i> Sign Up</a>
             </li>
           {% endif %}
-  
+
         </ul>
       </div>
     </div>
   </nav>
-  
