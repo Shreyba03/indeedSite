@@ -14,16 +14,32 @@
       {% if request.user.id == template_data.owner.id %}
         {% with p=template_data.profile %}
           {% if not p.headline or not p.education or not p.email or not p.location %}
-            <div class="alert alert-warning mb-4">
-              <i class="fas fa-exclamation-triangle me-2"></i>
-              Your profile is incomplete. You must fill in:
-              {% if not p.headline %} Headline{% endif %}
-              {% if not p.education %}, Education{% endif %}
-              {% if not p.email %}, Email{% endif %}
-              {% if not p.location %}, Location{% endif %}
-              to apply for jobs.
-              <a href="{% url 'profile.edit' template_data.owner.id %}" class="alert-link">Click here to edit your profile.</a>
+          <div class="alert alert-warning mb-4">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Your profile is incomplete.</strong>
+          
+            <p class="mb-1">You must fill in the following before applying for jobs:</p>
+          
+            <div class="mb-2">
+              {% if not p.headline %}
+                <span class="badge bg-danger me-1">Headline</span>
+              {% endif %}
+              {% if not p.education %}
+                <span class="badge bg-danger me-1">Education</span>
+              {% endif %}
+              {% if not p.email %}
+                <span class="badge bg-danger me-1">Email</span>
+              {% endif %}
+              {% if not p.location %}
+                <span class="badge bg-danger me-1">Location</span>
+              {% endif %}
             </div>
+          
+            <a href="{% url 'profile.edit' template_data.owner.id %}" class="alert-link">
+              Click here to edit your profile.
+            </a>
+          </div>
+          
           {% endif %}
         {% endwith %}
       {% endif %}
